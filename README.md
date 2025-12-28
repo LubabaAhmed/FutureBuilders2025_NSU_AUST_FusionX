@@ -66,7 +66,7 @@ AI Doctor:* Chat with an AI assistant for medical guidance
 -*Area and Environment Based Health Care:* Pre preparation and solution 
 
 
-#Tech Stack
+# Tech Stack
 
 
 - Frontend:React Native (Mobile App)  
@@ -75,7 +75,7 @@ AI Doctor:* Chat with an AI assistant for medical guidance
 - Deployment:** AI Studio  
 
 
-#UI
+# UI
 The application features a "Mission Control" style dashboard:
 Tactical Map: A central dark-mode map displaying sensor nodes and risk heatmaps.
 Telemetry Sidebar: Real-time feeds of Soil Moisture (%), Seismic Vibration (Hz), and Incline (Degrees).
@@ -102,7 +102,7 @@ This is the payload sent from the physical sensor nodes in the field to the Hill
   },
   "battery": 88                  // Percentage
 }
-
+```
 ## Project Structure
 
 HillShield/
