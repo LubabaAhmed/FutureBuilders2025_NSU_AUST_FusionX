@@ -75,9 +75,9 @@ AI Doctor:* Chat with an AI assistant for medical guidance
 - Deployment:** AI Studio
 
 # Scan Me
+!
 
 
-![img ](img.jpg)
 
 
 
