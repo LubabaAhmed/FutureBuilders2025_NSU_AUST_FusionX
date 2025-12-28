@@ -146,5 +146,4 @@ This is the payload sent from the physical sensor nodes in the field to the Hill
 | Google Gemini Pro |(https://gemini.google.com/app)  |
  
 # How The Solution handles limited internet Access
-*In limited Internet access we can connect and communicate people within a specific range.(500 m)
-We can also communicate with emergency contacts like doctors,national emergency numbers. We can also book doctor appointments on emergency basis and special cases like pregent women and children. We are also able to sent sos signal to nearby volunteers for help.We are also able to see the First aid, Disaster Management and Mental health support.
+Even with limited internet access, the system enables people within a specific range (up to 500 meters) to connect and communicate with each other. Users can reach emergency contacts such as doctors and national emergency services, book urgent medical appointments, and receive priority support for special cases including pregnant women and children. The platform also allows users to send SOS alerts to nearby volunteers for immediate assistance. Additionally, it provides access to first aid guidance, disaster management resources, and mental health support.
