@@ -1,0 +1,9 @@
+{
+  "name": "Copy of HillShield: Disaster-Resilient LifeLine",
+  "description": "A robust communication and medical triage application designed for remote regions like Bangladesh's Hill Tracts. Features mesh-simulated P2P messaging, an emergency SOS system, real-time shelter mapping, and an AI-powered medical assistant for low-connectivity environments.",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone",
+    "camera"
+  ]
+}
