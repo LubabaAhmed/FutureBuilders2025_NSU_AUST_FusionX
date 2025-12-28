@@ -98,4 +98,5 @@ export interface FirstAidStep {
   description: string;
   steps: string[];
   category: 'injury' | 'natural-disaster' | 'medical';
+  imageUrl?: string;
 }

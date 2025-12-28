@@ -25,7 +25,8 @@ import {
   ClipboardList,
   AlertCircle,
   PhoneCall,
-  UserCheck
+  UserCheck,
+  Image as ImageIcon
 } from 'lucide-react';
 import { FIRST_AID_DATA } from '../constants';
 import { FirstAidStep } from '../types';
@@ -66,7 +67,6 @@ const FirstAid: React.FC = () => {
   if (view === 'hub') {
     return (
       <div className="h-full bg-slate-50 overflow-y-auto animate-in fade-in duration-500 pb-24">
-        {/* Hub Header */}
         <div className="bg-indigo-950 p-10 text-white relative overflow-hidden shadow-2xl">
           <div className="absolute -top-10 -right-10 w-64 h-64 bg-red-600/10 rounded-full blur-3xl"></div>
           <div className="relative z-10">
@@ -78,25 +78,17 @@ const FirstAid: React.FC = () => {
         </div>
 
         <div className="p-6 space-y-6 -mt-8 relative z-20">
-          {/* Actionable Service Cards */}
           <div className="grid grid-cols-1 gap-4">
             <button 
               onClick={() => setView('appointment-hub')}
               className="w-full bg-white rounded-[2.5rem] p-6 shadow-xl border border-indigo-100 flex items-center space-x-5 transition-all active:scale-[0.97] group relative overflow-hidden"
             >
-              <div className="absolute -right-4 -bottom-4 opacity-[0.03] rotate-12">
-                 <Calendar className="w-24 h-24" />
-              </div>
               <div className="bg-indigo-700 p-5 rounded-[1.5rem] shadow-lg text-white group-hover:scale-110 transition-transform">
                 <Calendar className="w-8 h-8" />
               </div>
               <div className="text-left flex-1">
                 <h3 className="text-xl font-black italic tracking-tighter text-indigo-950">৪৮ ঘণ্টা সার্ভিস</h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Urgent Medical Appointment</p>
-                <div className="mt-2 flex items-center space-x-2 text-red-600">
-                  <Siren className="w-3 h-3" />
-                  <span className="text-[9px] font-black uppercase">২৪-৪৮ ঘণ্টা রেসপন্স</span>
-                </div>
               </div>
               <ChevronRight className="w-5 h-5 text-slate-200" />
             </button>
@@ -105,19 +97,12 @@ const FirstAid: React.FC = () => {
               onClick={() => setView('mom-kid-care')}
               className="w-full bg-white rounded-[2.5rem] p-6 shadow-xl border border-pink-100 flex items-center space-x-5 transition-all active:scale-[0.97] group relative overflow-hidden"
             >
-              <div className="absolute -right-4 -bottom-4 opacity-[0.03] rotate-12 text-pink-600">
-                 <Baby className="w-24 h-24" />
-              </div>
               <div className="bg-pink-600 p-5 rounded-[1.5rem] shadow-lg text-white group-hover:scale-110 transition-transform">
                 <Baby className="w-8 h-8" />
               </div>
               <div className="text-left flex-1">
                 <h3 className="text-xl font-black italic tracking-tighter text-pink-950">মা ও শিশু বিশেষ যত্ন</h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Mom & Kid Priority Care</p>
-                <div className="mt-2 flex items-center space-x-2 text-pink-600">
-                  <Heart className="w-3 h-3" />
-                  <span className="text-[9px] font-black uppercase">উচ্চ অগ্রাধিকার সার্ভিস</span>
-                </div>
               </div>
               <ChevronRight className="w-5 h-5 text-slate-200" />
             </button>
@@ -154,6 +139,60 @@ const FirstAid: React.FC = () => {
     );
   }
 
+  if (view === 'detail' && selectedItem) {
+    return (
+      <div className="h-full bg-slate-50 flex flex-col animate-in slide-in-from-bottom duration-300">
+        <SubHeader 
+          title={selectedItem.title} 
+          onBack={() => setView(selectedItem.category === 'natural-disaster' ? 'disaster-list' : 'first-aid-list')} 
+          color={selectedItem.category === 'natural-disaster' ? 'bg-slate-800' : 'bg-red-600'} 
+        />
+        <div className="flex-1 overflow-y-auto p-6 pb-24">
+          <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-xl border border-slate-100 mb-6">
+            {selectedItem.imageUrl ? (
+              <div className="relative h-56 w-full">
+                <img src={selectedItem.imageUrl} alt={selectedItem.title} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+                  <p className="text-white text-xs font-black uppercase tracking-widest">Visual Instruction Guide</p>
+                </div>
+              </div>
+            ) : (
+              <div className="h-48 bg-slate-100 flex flex-col items-center justify-center text-slate-300">
+                <ImageIcon className="w-16 h-16 mb-2" />
+                <p className="text-[10px] font-black uppercase">No Visual Aid Available</p>
+              </div>
+            )}
+            
+            <div className="p-8">
+              <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">{selectedItem.title}</h3>
+              <p className="text-slate-500 font-bold mb-8 leading-relaxed text-lg">{selectedItem.description}</p>
+              
+              <div className="space-y-6">
+                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] border-b pb-2">পালন করার ধাপসমূহ</p>
+                {selectedItem.steps.map((step, i) => (
+                  <div key={i} className="flex space-x-5 group">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black flex-shrink-0 shadow-md transition-transform group-hover:scale-110 ${selectedItem.category === 'natural-disaster' ? 'bg-slate-800 text-white' : 'bg-red-600 text-white'}`}>
+                      {i + 1}
+                    </div>
+                    <p className="text-slate-800 font-black text-sm leading-relaxed pt-2">{step}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-indigo-50 p-6 rounded-[2rem] border border-indigo-100 flex items-start space-x-4">
+             <Info className="w-6 h-6 text-indigo-600 flex-shrink-0" />
+             <p className="text-xs text-indigo-900 font-bold leading-relaxed">
+               যদি পরিস্থিতি আরও অবনতি হয়, তবে দ্রুত নিকটস্থ হাসপাতালে যোগাযোগ করুন অথবা ড্যাশবোর্ড থেকে SOS বাটন চাপুন।
+             </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback views (Appointment Hub, Mom & Kid, etc.) kept for consistency
   if (view === 'appointment-hub') {
     return (
       <div className="h-full bg-slate-50 flex flex-col animate-in slide-in-from-bottom duration-300 overflow-y-auto pb-24">
@@ -163,10 +202,7 @@ const FirstAid: React.FC = () => {
             <div className="w-20 h-20 bg-indigo-50 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 shadow-inner">
               <PhoneCall className="w-10 h-10 text-indigo-600" />
             </div>
-            <h3 className="text-2xl font-black text-slate-800 mb-2 tracking-tight">জরুরি স্বাস্থ্য পরামর্শ</h3>
-            <p className="text-sm text-slate-500 font-medium mb-10 leading-relaxed px-4 text-center">
-              আমরা দুর্যোগপূর্ণ এলাকায় ২৪ থেকে ৪৮ ঘণ্টার মধ্যে ভিডিও কলের মাধ্যমে বিশেষজ্ঞ ডাক্তারের পরামর্শ নিশ্চিত করি।
-            </p>
+            <h3 className="text-2xl font-black text-slate-800 mb-2 tracking-tight text-center">জরুরি স্বাস্থ্য পরামর্শ</h3>
             {aptBooked ? (
               <SuccessState token={`#MED-${Math.floor(1000 + Math.random() * 9000)}`} />
             ) : (
@@ -192,10 +228,7 @@ const FirstAid: React.FC = () => {
             <div className="w-20 h-20 bg-pink-50 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 shadow-inner">
               <Baby className="w-10 h-10 text-pink-600" />
             </div>
-            <h3 className="text-2xl font-black text-slate-800 mb-2 tracking-tight">মাতৃ ও শিশু বিশেষ কেয়ার</h3>
-            <p className="text-sm text-slate-500 font-medium mb-10 leading-relaxed px-4 text-center">
-              গর্ভবতী মা এবং শিশুদের জন্য আমাদের রয়েছে বিশেষ হাই-প্রায়োরিটি সাপোর্ট। যেকোনো জটিলতায় আমাদের বিশেষজ্ঞ দল আপনার পাশে আছে।
-            </p>
+            <h3 className="text-2xl font-black text-slate-800 mb-2 tracking-tight text-center">মাতৃ ও শিশু বিশেষ কেয়ার</h3>
             {momKidBooked ? (
               <SuccessState token={`#MK-${Math.floor(1000 + Math.random() * 9000)}`} color="green" />
             ) : (
@@ -207,24 +240,6 @@ const FirstAid: React.FC = () => {
               </button>
             )}
           </div>
-          <div className="grid grid-cols-1 gap-4">
-             <TriageDisplayItem 
-                icon={<Baby className="w-6 h-6 text-pink-600" />}
-                title="গর্ভবতী নারী"
-                level="সর্বোচ্চ অগ্রাধিকার"
-                color="border-pink-100 bg-pink-50/50"
-                textColor="text-pink-700"
-                desc="জরুরি প্রসবকালীন সাপোর্ট এবং পুষ্টির বিশেষ ব্যবস্থা।"
-              />
-              <TriageDisplayItem 
-                icon={<Users className="w-6 h-6 text-indigo-600" />}
-                title="শিশু (০-১২ বছর)"
-                level="বিশেষ অগ্রাধিকার"
-                color="border-indigo-100 bg-indigo-50/50"
-                textColor="text-indigo-700"
-                desc="শিশুদের টিকাদান এবং দুর্যোগকালীন অসুস্থতার দ্রুত সমাধান।"
-              />
-          </div>
         </div>
       </div>
     );
@@ -235,29 +250,6 @@ const FirstAid: React.FC = () => {
       <div className="h-full flex flex-col animate-in fade-in">
         <SubHeader title="মানসিক প্রশান্তি" onBack={() => setView('hub')} color="bg-teal-600" />
         <MentalHealth />
-      </div>
-    );
-  }
-
-  if (view === 'detail' && selectedItem) {
-    return (
-      <div className="h-full bg-slate-50 flex flex-col animate-in slide-in-from-bottom duration-300">
-        <SubHeader title={selectedItem.title} onBack={() => setView(selectedItem.category === 'natural-disaster' ? 'disaster-list' : 'first-aid-list')} color={selectedItem.category === 'natural-disaster' ? 'bg-slate-800' : 'bg-red-600'} />
-        <div className="flex-1 overflow-y-auto p-6 pb-24">
-          <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-100">
-            <p className="text-slate-500 font-bold mb-8 leading-relaxed text-lg">{selectedItem.description}</p>
-            <div className="space-y-6">
-              {selectedItem.steps.map((step, i) => (
-                <div key={i} className="flex space-x-5 group">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black flex-shrink-0 shadow-md transition-transform group-hover:scale-110 ${selectedItem.category === 'natural-disaster' ? 'bg-slate-800 text-white' : 'bg-red-600 text-white'}`}>
-                    {i + 1}
-                  </div>
-                  <p className="text-slate-800 font-black text-sm leading-relaxed pt-2">{step}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
     );
   }
