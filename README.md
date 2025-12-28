@@ -50,7 +50,7 @@ Department of Electrical and Computer Engineering
 | Google AI Studio |(https://aistudio.google.com/) |
 | Google Gemini Pro|(https://gemini.google.com/app)  |
 | ChatGpt | (https://chatgpt.com/)  |
-| VS Code |  |
+| VS Code | (https://vscode.dev/) |
 
 
 
