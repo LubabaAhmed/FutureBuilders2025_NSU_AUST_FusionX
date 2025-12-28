@@ -24,6 +24,8 @@ View your app in AI Studio: https://ai.studio/apps/drive/1Qc9CtGr1qWyHIfI5Bnq1u6
 ডাক্তার আছে?AI-Powered Healthcare for Rural Bangladesh
 
 # Team Details 
+Team Name:FutureBuilders2025_NSU_AUST_FusionX
+
 1.Ayon Rahman
 Department of Electrical & Electronic Engineering
 
@@ -33,10 +35,17 @@ Department of Electrical and Computer Engineering
 3.Lubaba Ahmed
 Department of Electrical and Computer Engineering
 
+## Features
+## UI
+## Output Schema
+## Project Structure
+## AI Web Search 
+
 # Problem Statement 
 # Solution Overviuew
 # Techlogies Used 
 # AI Tools Disclosure
 # How The Solution Handles limited internet Access
+# Resources
 
 
