@@ -48,8 +48,8 @@ Healthcare in rural and hill-tract regions of Bangladesh is often inaccessible. 
 # Features 
 
 
-#Technologies Used
-#UI
+# Technologies Used
+# UI
 HillShield/
 ├── index.html          # Core Entry (React 19 + Import Maps)
 ├── src/
@@ -59,8 +59,8 @@ HillShield/
 ├── assets/             # Map tiles, Icons, and Brand Assets
 └── README.md           # Documentation (You are here)
 
-#Output Schema
-#Project Structure
+# Output Schema
+# Project Structure
 HillShield/
 ├── public/                 # Static assets
 │   ├── favicon.ico
