@@ -77,7 +77,7 @@ AI Doctor:* Chat with an AI assistant for medical guidance
 # Scan Me
 
 
-![Image 1](ডাক্তার আছে.jpg)
+![img ](img.jpg)
 
 
 
