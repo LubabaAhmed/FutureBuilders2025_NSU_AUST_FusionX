@@ -41,7 +41,7 @@ Department of Electrical & Computer Engineering
 Healthcare in rural and hill-tract regions of Bangladesh is often inaccessible. Long travel distances are costly and time consuming. Remote locations, rough terrain, and limited medical facilities make timely treatment difficult.
 
 
-#Solution Overview
+# Solution Overview
 - AI-guided medical consultation
 - Emergency alerts and guidance
 - Health records management
