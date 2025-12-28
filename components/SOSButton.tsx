@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { User, SOSAlert } from '../types';
-import { AlertCircle, X, Send, Loader2, Signal, MapPin, Phone, Users, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { User, SOSAlert, TriageLevel } from '../types';
+import { AlertCircle, X, Send, Loader2, Signal, MapPin, Phone, Users, CheckCircle2, ShieldAlert, Baby, Siren, Activity } from 'lucide-react';
 import { getAIPrioritization } from '../services/geminiService';
 import { STRINGS, PUBLIC_EMERGENCY_CONTACTS } from '../constants';
 
@@ -16,6 +16,7 @@ const SOSButton: React.FC<SOSButtonProps> = ({ user, onSOS }) => {
   const [details, setDetails] = useState('');
   const [signal, setSignal] = useState(85);
   const [eta, setEta] = useState(12);
+  const [medicalType, setMedicalType] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -31,7 +32,9 @@ const SOSButton: React.FC<SOSButtonProps> = ({ user, onSOS }) => {
     setStatus('sending');
     const lat = 22.6485 + (Math.random() - 0.5) * 0.01;
     const lng = 92.1747 + (Math.random() - 0.5) * 0.01;
-    const aiResult = await getAIPrioritization(details || "সহযোগিতা প্রয়োজন");
+    
+    const combinedDetails = medicalType ? `[${medicalType}] ${details}` : details;
+    const aiResult = await getAIPrioritization(combinedDetails || "সহযোগিতা প্রয়োজন");
 
     const newAlert: SOSAlert = {
       id: Date.now().toString(),
@@ -40,9 +43,10 @@ const SOSButton: React.FC<SOSButtonProps> = ({ user, onSOS }) => {
       location: { lat, lng },
       timestamp: Date.now(),
       priority: aiResult.priority,
-      details: details || "জরুরি সহযোগিতা প্রয়োজন",
+      details: combinedDetails || "জরুরি সহযোগিতা প্রয়োজন",
       aiAssessment: aiResult.reasoning,
-      signalStrength: signal
+      signalStrength: signal,
+      triageCategory: medicalType
     };
 
     onSOS(newAlert);
@@ -56,6 +60,7 @@ const SOSButton: React.FC<SOSButtonProps> = ({ user, onSOS }) => {
     setIsOpen(false);
     setStatus('idle');
     setDetails('');
+    setMedicalType('');
     setEta(12);
   };
 
@@ -85,10 +90,40 @@ const SOSButton: React.FC<SOSButtonProps> = ({ user, onSOS }) => {
             <div className="flex-1 overflow-y-auto p-8 space-y-6">
               {status === 'writing' && (
                 <>
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">ধরণ নির্বাচন করুন</p>
+                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                      <TriageChip 
+                        active={medicalType === 'Pregnant'} 
+                        label="গর্ভবতী" 
+                        icon={<Baby className="w-4 h-4" />}
+                        onClick={() => setMedicalType(medicalType === 'Pregnant' ? '' : 'Pregnant')}
+                      />
+                      <TriageChip 
+                        active={medicalType === 'Child'} 
+                        label="শিশু" 
+                        icon={<Users className="w-4 h-4" />}
+                        onClick={() => setMedicalType(medicalType === 'Child' ? '' : 'Child')}
+                      />
+                      <TriageChip 
+                        active={medicalType === 'Head Injury'} 
+                        label="মাথায় আঘাত" 
+                        icon={<Siren className="w-4 h-4" />}
+                        onClick={() => setMedicalType(medicalType === 'Head Injury' ? '' : 'Head Injury')}
+                      />
+                      <TriageChip 
+                        active={medicalType === 'Minor'} 
+                        label="সামান্য আঘাত" 
+                        icon={<Activity className="w-4 h-4" />}
+                        onClick={() => setMedicalType(medicalType === 'Minor' ? '' : 'Minor')}
+                      />
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-3">
-                    {PUBLIC_EMERGENCY_CONTACTS.map(c => (
+                    {PUBLIC_EMERGENCY_CONTACTS.slice(0, 4).map(c => (
                       <a key={c.id} href={`tel:${c.phone}`} className="flex flex-col items-center justify-center p-4 bg-red-50 rounded-2xl border border-red-100 active:scale-95 transition-all group">
-                        {c.name.includes('Army') || c.name.includes('Navy') ? <ShieldAlert className="w-5 h-5 text-indigo-600 mb-1" /> : <Phone className="w-5 h-5 text-red-600 mb-1" />}
+                        <Phone className="w-5 h-5 text-red-600 mb-1" />
                         <span className="text-[9px] font-black text-slate-800 leading-tight text-center">{c.name}</span>
                         <span className="text-xs font-black text-red-600 mt-1">{c.phone}</span>
                       </a>
@@ -96,7 +131,7 @@ const SOSButton: React.FC<SOSButtonProps> = ({ user, onSOS }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">বিপদের বিস্তারিত (ঐচ্ছিক)</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">অতিরিক্ত তথ্য (ঐচ্ছিক)</p>
                     <textarea 
                       className="w-full bg-slate-100 border-none rounded-3xl p-5 text-slate-700 text-sm h-24 outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
                       placeholder="উদা: আমাদের পাহাড়ের উপরে সাহায্য লাগবে..."
@@ -139,13 +174,9 @@ const SOSButton: React.FC<SOSButtonProps> = ({ user, onSOS }) => {
                   <div className="space-y-3">
                     <h4 className="text-2xl font-black text-slate-800">সাহায্য আসছে!</h4>
                     <p className="text-sm text-slate-500 leading-relaxed font-medium">
-                      সেনাবাহিনীর একটি টহল দল এবং রেড ক্রিসেন্ট ভলান্টিয়াররা আপনার দিকে রওনা হয়েছে। শান্ত থাকুন এবং আপনার ফোনের চার্জ বাঁচান।
+                      {medicalType && <span className="text-red-600 font-bold block mb-1">[{medicalType} কন্ট্যাক্ট চিহ্নিত]</span>}
+                      সেনাবাহিনীর একটি টহল দল এবং রেড ক্রিসেন্ট ভলান্টিয়াররা আপনার দিকে রওনা হয়েছে।
                     </p>
-                  </div>
-
-                  <div className="p-4 bg-green-50 rounded-3xl flex items-center justify-center space-x-3 text-green-700 border border-green-100">
-                    <CheckCircle2 className="w-5 h-5" />
-                    <span className="text-xs font-black uppercase tracking-wider">উদ্ধারকারী দল আপনাকে দেখছে</span>
                   </div>
 
                   <button 
@@ -163,5 +194,19 @@ const SOSButton: React.FC<SOSButtonProps> = ({ user, onSOS }) => {
     </>
   );
 };
+
+const TriageChip = ({ active, label, icon, onClick }: { active: boolean, label: string, icon: any, onClick: () => void }) => (
+  <button 
+    onClick={onClick}
+    className={`flex-shrink-0 px-4 py-2 rounded-xl flex items-center space-x-2 border-2 transition-all ${
+      active 
+        ? 'bg-red-600 border-red-600 text-white shadow-md' 
+        : 'bg-slate-50 border-slate-100 text-slate-500 hover:border-red-200'
+    }`}
+  >
+    {icon}
+    <span className="text-[10px] font-black uppercase whitespace-nowrap">{label}</span>
+  </button>
+);
 
 export default SOSButton;

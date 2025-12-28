@@ -23,7 +23,10 @@ import {
   Info,
   Stethoscope,
   Pill,
-  Thermometer
+  Thermometer,
+  Lock,
+  Mail,
+  Save
 } from 'lucide-react';
 import { STRINGS, PREDEFINED_ALLERGIES, PREDEFINED_CONDITIONS, PUBLIC_EMERGENCY_CONTACTS } from '../constants';
 
@@ -32,21 +35,60 @@ interface ProfileProps {
   onLogout: () => void;
 }
 
-type ProfileScreen = 'main' | 'medical' | 'contacts' | 'settings' | 'privacy';
+type ProfileScreen = 'main' | 'medical' | 'contacts' | 'settings' | 'privacy' | 'credentials';
 
 const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
   const [screen, setScreen] = useState<ProfileScreen>('main');
   const [currentUser, setCurrentUser] = useState<User>(user);
   
-  // Local states for adding items - SEPARATED to fix the bug
+  // Local states for adding items
   const [newAllergy, setNewAllergy] = useState('');
   const [newCondition, setNewCondition] = useState('');
   const [newMedication, setNewMedication] = useState('');
   const [newContact, setNewContact] = useState({ name: '', phone: '' });
 
+  // Credential editing states
+  const [editUserId, setEditUserId] = useState(user.userId);
+  const [editPassword, setEditPassword] = useState(user.password || '');
+  const [credMessage, setCredMessage] = useState('');
+
   const saveUser = (updated: User) => {
     setCurrentUser(updated);
+    // Persist current session
     localStorage.setItem('hillshield_user', JSON.stringify(updated));
+    
+    // Persist to account list
+    const accountsRaw = localStorage.getItem('hillshield_accounts');
+    if (accountsRaw) {
+      const accounts: User[] = JSON.parse(accountsRaw);
+      const index = accounts.findIndex(a => a.id === updated.id);
+      if (index !== -1) {
+        accounts[index] = updated;
+        localStorage.setItem('hillshield_accounts', JSON.stringify(accounts));
+      }
+    }
+  };
+
+  const updateCredentials = () => {
+    if (!editUserId.trim() || !editPassword.trim()) {
+      setCredMessage('সবগুলো ঘর পূরণ করুন।');
+      return;
+    }
+
+    // Check uniqueness if ID changed
+    if (editUserId !== currentUser.userId) {
+       const accountsRaw = localStorage.getItem('hillshield_accounts');
+       const accounts: User[] = accountsRaw ? JSON.parse(accountsRaw) : [];
+       if (accounts.find(a => a.userId === editUserId && a.id !== currentUser.id)) {
+         setCredMessage('এই ইউজার আইডি ইতিমধ্যে ব্যবহার করা হয়েছে।');
+         return;
+       }
+    }
+
+    const updated = { ...currentUser, userId: editUserId, password: editPassword };
+    saveUser(updated);
+    setCredMessage('সফলভাবে আপডেট করা হয়েছে!');
+    setTimeout(() => setCredMessage(''), 3000);
   };
 
   const removeItem = (type: 'allergies' | 'conditions' | 'medications', index: number) => {
@@ -75,7 +117,6 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
     history[type] = [...history[type], textToAdd];
     saveUser({ ...currentUser, medicalHistory: history });
     
-    // Reset specific field
     if (type === 'allergies') setNewAllergy('');
     if (type === 'conditions') setNewCondition('');
     if (type === 'medications') setNewMedication('');
@@ -137,7 +178,6 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
       </div>
       
       <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-10">
-        {/* Blood Group */}
         <section>
           <div className="flex items-center space-x-2 mb-4">
             <Droplets className="w-5 h-5 text-red-600" />
@@ -160,7 +200,6 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
           </div>
         </section>
 
-        {/* Allergies */}
         <section className="bg-blue-50/30 p-6 rounded-[2rem] border border-blue-100/50">
           <div className="flex items-center space-x-2 mb-4">
             <Info className="w-5 h-5 text-blue-600" />
@@ -210,7 +249,6 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
           </div>
         </section>
 
-        {/* Long term conditions */}
         <section className="bg-amber-50/30 p-6 rounded-[2rem] border border-amber-100/50">
           <div className="flex items-center space-x-2 mb-4">
             <Activity className="w-5 h-5 text-amber-600" />
@@ -260,7 +298,6 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
           </div>
         </section>
 
-        {/* Current Medications */}
         <section className="bg-purple-50/30 p-6 rounded-[2rem] border border-purple-100/50">
           <div className="flex items-center space-x-2 mb-4">
             <Pill className="w-5 h-5 text-purple-600" />
@@ -290,6 +327,62 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
             </button>
           </div>
         </section>
+      </div>
+    </div>
+  );
+
+  const renderCredentials = () => (
+    <div className="flex-1 p-6 space-y-6 animate-in slide-in-from-right duration-200">
+      <div className="flex items-center space-x-4 mb-4">
+        <button onClick={() => setScreen('main')} className="bg-white p-2 rounded-xl shadow-sm text-red-600 hover:bg-red-50 transition-colors">
+          <ChevronRight className="w-5 h-5 rotate-180" />
+        </button>
+        <h2 className="text-xl font-black text-slate-800">অ্যাকাউন্ট সেটিংস</h2>
+      </div>
+
+      <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-6">
+        {credMessage && (
+           <div className={`p-4 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center space-x-3 ${credMessage.includes('সফল') ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+             <Check className="w-4 h-4" />
+             <span>{credMessage}</span>
+           </div>
+        )}
+
+        <div className="space-y-4">
+           <div className="space-y-2">
+             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ইউজার আইডি</label>
+             <div className="relative">
+               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-600" />
+               <input 
+                 type="text"
+                 className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-2xl font-bold outline-none transition-all"
+                 value={editUserId}
+                 onChange={(e) => setEditUserId(e.target.value)}
+               />
+             </div>
+           </div>
+
+           <div className="space-y-2">
+             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">পাসওয়ার্ড</label>
+             <div className="relative">
+               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-600" />
+               <input 
+                 type="password"
+                 className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-2xl font-bold outline-none transition-all"
+                 value={editPassword}
+                 onChange={(e) => setEditPassword(e.target.value)}
+               />
+             </div>
+           </div>
+
+           <button 
+             onClick={updateCredentials}
+             className="w-full bg-indigo-950 text-white font-black py-5 rounded-2xl shadow-xl active:scale-95 transition-all flex items-center justify-center space-x-3 border-b-4 border-black mt-4"
+           >
+             <Save className="w-5 h-5" />
+             <span>পরিবর্তন সংরক্ষণ করুন</span>
+           </button>
+        </div>
       </div>
     </div>
   );
@@ -355,12 +448,6 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
               </div>
             </div>
           ))}
-          {currentUser.contacts.length === 0 && (
-            <div className="text-center py-10 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-              <Info className="w-10 h-10 text-slate-200 mx-auto mb-4" />
-              <p className="text-sm text-slate-400 font-medium italic">এখনো কোনো কন্টাক্ট নেই।</p>
-            </div>
-          )}
         </div>
 
         <div className="bg-indigo-50/50 p-6 rounded-[2rem] border-2 border-dashed border-indigo-100">
@@ -417,11 +504,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
             active={currentUser.settings.offlineMode} 
             onClick={() => toggleSetting('offlineMode')} 
           />
-          {/* DARK MODE REMOVED AS REQUESTED */}
         </div>
-        <p className="mt-8 text-[10px] text-slate-400 font-medium leading-relaxed px-4">
-          অফলাইন মোড সক্রিয় থাকলে ইন্টারনেট না থাকলেও নিকটস্থ ডিভাইসগুলোর সাথে মেস নেটওয়ার্কের মাধ্যমে যোগাযোগ করা সম্ভব হবে।
-        </p>
       </div>
     </div>
   );
@@ -449,20 +532,6 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
             active={currentUser.privacy.visibleToResponders} 
             onClick={() => togglePrivacy('visibleToResponders')} 
           />
-          <ToggleOption 
-            icon={<Activity className="w-5 h-5" />} 
-            label="ব্যবহারবিধি ডেটা শেয়ার করুন" 
-            active={currentUser.privacy.dataUsageAnalytics} 
-            onClick={() => togglePrivacy('dataUsageAnalytics')} 
-          />
-        </div>
-        <div className="mt-8 bg-amber-50 p-6 rounded-3xl border border-amber-100">
-           <div className="flex items-start space-x-3">
-             <Shield className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-             <p className="text-[11px] text-amber-900 font-medium leading-relaxed">
-               আপনার ডেটা সম্পূর্ণ এনক্রিপ্টেড এবং শুধুমাত্র জরুরি সেবার প্রয়োজনে অনুমোদিত উদ্ধারকারীদের দেখানো হবে।
-             </p>
-           </div>
         </div>
       </div>
     </div>
@@ -472,6 +541,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
   if (screen === 'contacts') return <div className="h-full bg-slate-50 flex flex-col overflow-y-auto">{renderContacts()}</div>;
   if (screen === 'settings') return <div className="h-full bg-slate-50 flex flex-col overflow-y-auto">{renderSettings()}</div>;
   if (screen === 'privacy') return <div className="h-full bg-slate-50 flex flex-col overflow-y-auto">{renderPrivacy()}</div>;
+  if (screen === 'credentials') return <div className="h-full bg-slate-50 flex flex-col overflow-y-auto">{renderCredentials()}</div>;
 
   return (
     <div className="h-full bg-slate-50 flex flex-col overflow-y-auto">
@@ -484,7 +554,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
             <UserIcon className="w-14 h-14 text-indigo-950 -rotate-2" />
           </div>
           <h2 className="text-3xl font-black text-white tracking-tight">{currentUser.name}</h2>
-          <p className="text-indigo-300 text-sm font-medium mt-1">{currentUser.email}</p>
+          <p className="text-indigo-300 text-sm font-medium mt-1">{currentUser.userId}</p>
           <div className="mt-6 inline-flex items-center space-x-3 bg-indigo-900/50 px-4 py-2 rounded-2xl border border-indigo-800">
             <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></div>
             <span className="text-[11px] text-indigo-100 font-black uppercase tracking-widest">নাগরিক প্রোফাইল</span>
@@ -492,8 +562,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
         </div>
       </div>
 
-      <div className="flex-1 p-6 space-y-6 -mt-6">
-        {/* Quick Medical Summary */}
+      <div className="flex-1 p-6 space-y-6 -mt-6 pb-24">
         <div 
           onClick={() => setScreen('medical')}
           className="bg-white rounded-[2.5rem] shadow-xl p-8 border border-red-50 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all group"
@@ -522,35 +591,32 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
               </div>
               <span className="text-2xl font-black text-red-600 tracking-tighter">{currentUser.medicalHistory?.bloodGroup}</span>
             </div>
-            
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              {currentUser.medicalHistory?.allergies.length ? (
-                 <span className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-xl text-[10px] font-black whitespace-nowrap">অ্যালার্জি ({currentUser.medicalHistory.allergies.length})</span>
-              ) : null}
-              {currentUser.medicalHistory?.conditions.length ? (
-                 <span className="bg-amber-50 text-amber-600 px-3 py-1.5 rounded-xl text-[10px] font-black whitespace-nowrap">দীর্ঘস্থায়ী রোগ ({currentUser.medicalHistory.conditions.length})</span>
-              ) : null}
-            </div>
           </div>
         </div>
 
         <div className="bg-white rounded-[2.5rem] shadow-md border border-slate-100 overflow-hidden">
           <MenuOption 
+            icon={<Lock className="text-indigo-600" />} 
+            label="অ্যাকাউন্ট সেটিংস" 
+            sub="ইউজার আইডি ও পাসওয়ার্ড পরিবর্তন করুন"
+            onClick={() => setScreen('credentials')}
+          />
+          <MenuOption 
             icon={<Shield className="text-indigo-600" />} 
             label={`${STRINGS.contacts} (${currentUser.contacts.length})`} 
-            sub="জরুরি সেবার জন্য জাতীয় ও ব্যক্তিগত কন্টাক্ট"
+            sub="জরুরি সেবার জন্য কন্টাক্ট লিস্ট"
             onClick={() => setScreen('contacts')}
           />
           <MenuOption 
             icon={<FileText className="text-amber-600" />} 
             label={STRINGS.privacy} 
-            sub="আপনার তথ্যের নিরাপত্তা ও দৃশ্যমানতা নিয়ন্ত্রণ করুন"
+            sub="সুরক্ষা ও দৃশ্যমানতা নিয়ন্ত্রণ"
             onClick={() => setScreen('privacy')}
           />
           <MenuOption 
             icon={<Settings className="text-slate-600" />} 
             label={STRINGS.settings} 
-            sub="নোটিফিকেশন ও অফলাইন মেস নেটওয়ার্ক কনফিগার"
+            sub="নোটিফিকেশন ও অফলাইন মেস নেটওয়ার্ক"
             onClick={() => setScreen('settings')}
           />
         </div>
@@ -573,7 +639,7 @@ const MenuOption = ({ icon, label, sub, onClick }: { icon: React.ReactNode, labe
     className="w-full flex items-center justify-between p-6 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-b-0 text-left"
   >
     <div className="flex items-center space-x-5">
-      <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-white transition-colors">
+      <div className="p-3 bg-slate-50 rounded-2xl">
         {icon}
       </div>
       <div>

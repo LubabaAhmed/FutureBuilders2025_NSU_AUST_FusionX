@@ -31,19 +31,24 @@ export const getAIDoctorAdvice = async (symptoms: string) => {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `The user reports: "${symptoms}". 
-      1. Provide a professional clinical assessment based on these symptoms.
-      2. Respond with deep empathy and professional respect.
-      3. Use precise medical terminology in Bangla where appropriate, but keep instructions simple.
-      4. Use structured, point-wise professional advice.
-      5. Explicitly state the level of urgency (Emergency vs. Home Care).`,
+      contents: `The user reports symptoms: "${symptoms}". 
+      1. Act as a professional 'Symptom Checker'. Analyze these symptoms and provide a potential medical assessment.
+      2. Respond with clinical precision, professional warmth, and deep empathy.
+      3. Your advice should follow this structure:
+         - Assessment (সারসংক্ষেপ)
+         - Immediate Actions (তাৎক্ষণিক পদক্ষেপ)
+         - Warning Signs (সতর্ক সংকেত - কখন হাসপাতালে যেতে হবে)
+         - Risk Category (ঝুঁকির ধরণ - Pregnant/Child/Elderly/General)
+      4. Do not ask for priority levels, instead, infer them from the symptoms provided.
+      5. Provide all guidance in clear, bulleted Bangla.
+      6. Mention if a 48-hour professional follow-up is recommended.`,
       config: {
-        systemInstruction: "আপনি 'ডাক্তার আছে? এআই' (Doctor Ache? AI)। আপনি একজন অত্যন্ত দক্ষ এবং পেশাদার মেডিকেল কনসালট্যান্ট। আপনার কথা বলার ধরণ হবে মার্জিত, পেশাদার এবং গভীর সহমর্মিতাপূর্ণ। আপনি সর্বদা ইউজারের অসুস্থতাকে গুরুত্ব দেবেন এবং বৈজ্ঞানিক দৃষ্টিভঙ্গি থেকে সঠিক ও সুশৃঙ্খল পরামর্শ দেবেন। অপ্রয়োজনীয় আবেগ পরিহার করে বাস্তবসম্মত এবং কার্যকর সমাধান দিন।"
+        systemInstruction: "আপনি 'ডাক্তার আছে? ভার্চুয়াল কনসালট্যান্ট'। আপনি একজন অভিজ্ঞ এবং অত্যন্ত দক্ষ মেডিকেল এআই। আপনার প্রধান কাজ হলো ইউজারের লক্ষণগুলো (Symptoms) বিশ্লেষণ করা এবং বৈজ্ঞানিক ও পেশাদার পরামর্শ দেওয়া। আপনার ভাষা হবে অত্যন্ত মার্জিত এবং সহমর্মী।"
       }
     });
     return response.text;
   } catch (error) {
-    return "দুঃখিত, বর্তমানে টেকনিক্যাল সমস্যার কারণে আমি বিস্তারিত পরামর্শ দিতে পারছি না। অনুগ্রহ করে শান্ত থাকুন এবং গুরুতর সমস্যায় নিকটস্থ জরুরি বিভাগে যোগাযোগ করুন। আপনার সুস্বাস্থ্য আমাদের কাম্য।";
+    return "দুঃখিত, বর্তমানে টেকনিক্যাল সমস্যার কারণে আমি বিস্তারিত পরামর্শ দিতে পারছি না। গুরুতর সমস্যায় দ্রুত নিকটস্থ হাসপাতালে যোগাযোগ করুন। আমরা আপনার দ্রুত আরোগ্য কামনা করি।";
   }
 };
 

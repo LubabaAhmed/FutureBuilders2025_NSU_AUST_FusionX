@@ -17,8 +17,12 @@ export interface PrivacyProtocol {
   dataUsageAnalytics: boolean;
 }
 
+export type TriageLevel = 'critical' | 'high' | 'standard' | 'low';
+
 export interface User {
   id: string;
+  userId: string; // The login identifier (Email/Username)
+  password?: string;
   name: string;
   email: string;
   role: 'citizen' | 'responder' | 'authority';
@@ -28,6 +32,7 @@ export interface User {
     allergies: string[];
     conditions: string[];
     medications: string[];
+    triageStatus?: TriageLevel;
   };
   contacts: Contact[];
   settings: AppSettings;
@@ -53,6 +58,17 @@ export interface SOSAlert {
   details: string;
   aiAssessment?: string;
   signalStrength: number;
+  triageCategory?: string;
+}
+
+export interface Appointment {
+  id: string;
+  userId: string;
+  type: 'general' | 'emergency' | '48hr-urgent';
+  status: 'pending' | 'confirmed' | 'completed';
+  requestTime: number;
+  scheduledTime?: number;
+  triageLevel: TriageLevel;
 }
 
 export interface Shelter {
