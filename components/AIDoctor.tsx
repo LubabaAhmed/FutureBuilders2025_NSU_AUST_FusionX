@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { User } from '../types';
-import { Stethoscope, Send, Brain, ShieldCheck, Loader2, Sparkles, MessageCircle, Thermometer, Info, AlertTriangle, ChevronRight, Shield, Activity, ClipboardList, Monitor } from 'lucide-react';
+import { Stethoscope, Send, Brain, ShieldCheck, Loader2, Sparkles, MessageCircle, Thermometer, Info, AlertTriangle, ChevronRight, Heart, Shield, Activity } from 'lucide-react';
 import { getAIDoctorAdvice } from '../services/geminiService';
 import { COMMON_SYMPTOMS } from '../constants';
 
@@ -11,10 +11,7 @@ interface AIDoctorProps {
 
 const AIDoctor: React.FC<AIDoctorProps> = ({ user }) => {
   const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([
-    { 
-      role: 'ai', 
-      text: `সিস্টেম স্ট্যাটাস: অনলাইন\nমেডিকেল কনসালট্যান্ট এআই (DA-AI-2025) সক্রিয়।\n\nইউজার: ${user.name} | আইডি: ${user.id}\nরেফারেন্স টাইম: ${new Date().toLocaleTimeString()}\n\nঅনুগ্রহ করে আপনার বর্তমান শারীরিক উপসর্গ বা ক্লিনিক্যাল অভিযোগসমূহ বিস্তারিত বর্ণনা করুন। সিস্টেমটি প্রাপ্ত তথ্যের ভিত্তিতে ডায়াগনস্টিক স্ট্যান্ডার্ড অনুযায়ী তাৎক্ষণিক ট্রায়াজ লেভেল এবং প্রয়োজনীয় প্রাথমিক পদক্ষেপসমূহ অবহিত করবে।` 
-    }
+    { role: 'ai', text: `সুপ্রভাত ${user.name}। আমি 'ডাক্তার আছে? এআই' পেশাদার মেডিকেল কনসালট্যান্ট। আপনার বর্তমান শারীরিক অবস্থা বা লক্ষণগুলো সম্পর্কে আমাকে বিস্তারিত জানান। আমি আপনাকে একটি সুশৃঙ্খল এবং কার্যকর পরামর্শ দেওয়ার জন্য প্রস্তুত আছি। আপনার দ্রুত আরোগ্য আমাদের প্রধান লক্ষ্য।` }
   ]);
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
@@ -41,103 +38,117 @@ const AIDoctor: React.FC<AIDoctorProps> = ({ user }) => {
   };
 
   const handleSymptomSelect = (label: string) => {
-    handleSend(`লক্ষণ: ${label}। ক্লিনিক্যাল অ্যাসেসমেন্ট এবং গাইডলাইন প্রয়োজন।`);
+    handleSend(`আমি ${label} অনুভব করছি। এর ক্লিনিক্যাল ম্যানেজমেন্ট এবং প্রাথমিক পদক্ষেপগুলো কী হওয়া উচিত?`);
   };
 
   return (
     <div className="flex flex-col h-full bg-slate-50 animate-in fade-in duration-300">
-      {/* Strict Professional Header */}
+      {/* Professional & Friendly Header */}
       <div className="bg-indigo-950 p-6 text-white relative overflow-hidden shadow-xl border-b border-indigo-900">
-        <div className="absolute -top-6 -right-6 p-8 opacity-5">
-          <Monitor className="w-32 h-32" />
+        <div className="absolute -top-6 -right-6 p-8 opacity-10">
+          <Stethoscope className="w-32 h-32" />
         </div>
         <div className="relative flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 bg-indigo-900/40 rounded-xl flex items-center justify-center shadow-lg border border-white/10 backdrop-blur-sm">
-              <ShieldCheck className="w-8 h-8 text-indigo-400" />
+            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center shadow-lg border border-white/20 backdrop-blur-sm">
+              <Heart className="w-8 h-8 text-red-500" />
             </div>
             <div>
-              <h3 className="text-xl font-black tracking-tight uppercase">মেডিকেল এআই <span className="text-indigo-400">কনসালট্যান্ট</span></h3>
+              <h3 className="text-xl font-black tracking-tight">ডাক্তার আছে? <span className="text-red-500">মেডিকেল কনসালট্যান্ট</span></h3>
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>
-                <p className="text-[10px] text-indigo-200 font-black uppercase tracking-widest">ডায়াগনস্টিক ইন্টারফেস সক্রিয়</p>
+                <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+                <p className="text-[10px] text-indigo-200 font-black uppercase tracking-widest">পেশাদার এআই পরামর্শক সক্রিয়</p>
               </div>
             </div>
           </div>
-          <div className="hidden md:block bg-indigo-900/80 px-4 py-2 rounded-lg border border-indigo-800">
-             <span className="text-[10px] font-black text-indigo-100 uppercase">এনক্রিপ্টেড সেশন: {user.id.slice(0, 4)}</span>
+          <div className="hidden md:block bg-indigo-900/50 px-3 py-1.5 rounded-lg border border-indigo-800">
+            <span className="text-[10px] font-bold text-indigo-300">Expert ID: DA-AI-2025</span>
           </div>
         </div>
       </div>
 
-      {/* Symptom Selection Grid */}
+      {/* Structured Symptom Picker */}
       {messages.length === 1 && (
         <div className="p-4 bg-white border-b border-slate-200 shadow-sm animate-in slide-in-from-top duration-500">
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 ml-1 flex items-center">
-             <Activity className="w-3 h-3 mr-1" /> ডায়াগনস্টিক প্যারামিটার নির্বাচন করুন:
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1 flex items-center">
+             <Activity className="w-3 h-3 mr-1" /> আপনার প্রধান লক্ষণটি বাছাই করুন:
           </p>
           <div className="grid grid-cols-3 gap-3">
             {COMMON_SYMPTOMS.map(s => (
               <button 
                 key={s.id}
                 onClick={() => handleSymptomSelect(s.label)}
-                className="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center space-y-1 active:scale-95 transition-all hover:bg-indigo-950 hover:text-white group"
+                className="bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center space-y-1 active:scale-95 transition-all hover:bg-indigo-50 hover:border-indigo-300 group"
               >
                 <span className="text-xl group-hover:scale-110 transition-transform">{s.icon}</span>
-                <span className="text-[11px] font-bold text-slate-700 group-hover:text-white">{s.label}</span>
+                <span className="text-[11px] font-bold text-slate-700">{s.label}</span>
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Report-style Messages */}
+      {/* Chat Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50/50">
         {messages.map((m, idx) => (
           <div key={idx} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[92%] p-5 shadow-sm text-sm leading-relaxed transition-all ${
+            <div className={`max-w-[88%] p-5 shadow-sm text-sm leading-relaxed transition-all ${
               m.role === 'user' 
-                ? 'bg-slate-200 text-slate-800 rounded-2xl rounded-br-none border border-slate-300' 
-                : 'bg-white border border-slate-200 text-slate-900 rounded-2xl rounded-bl-none shadow-md'
+                ? 'bg-indigo-900 text-white rounded-[1.75rem] rounded-br-none' 
+                : 'bg-white border border-slate-200 text-slate-800 rounded-[1.75rem] rounded-bl-none shadow-md'
             }`}>
               {m.role === 'ai' && (
                 <div className="flex items-center space-x-2 mb-3 border-b border-slate-100 pb-2">
-                  <ClipboardList className="w-4 h-4 text-indigo-600" />
-                  <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">ক্লিনিক্যাল রেসপন্স</span>
+                  <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                  <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">ক্লিনিক্যাল অ্যাসেসমেন্ট</span>
                 </div>
               )}
-              <div className="space-y-3 font-medium text-[13px]">
+              <div className="space-y-3 font-medium">
                 {m.text.split('\n').map((line, i) => (
-                  <p key={i} className={line.startsWith('-') || /^\d+\./.test(line) ? 'pl-4 border-l-2 border-indigo-600 py-1 bg-indigo-50/30' : ''}>
+                  <p key={i} className={line.startsWith('-') || /^\d+\./.test(line) ? 'pl-4 border-l-2 border-indigo-200 py-0.5' : ''}>
                     {line}
                   </p>
                 ))}
               </div>
+              {m.role === 'ai' && idx > 0 && (
+                <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between">
+                  <span className="text-[9px] text-slate-400 italic">জেনারেটেড: {new Date().toLocaleTimeString()}</span>
+                  <div className="flex space-x-2">
+                    <button className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800">কপি করুন</button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ))}
         {isThinking && (
           <div className="flex justify-start">
-            <div className="bg-white border border-slate-200 p-5 rounded-2xl flex items-center space-x-4 shadow-sm">
+            <div className="bg-white border border-slate-200 p-5 rounded-[1.75rem] rounded-bl-none flex items-center space-x-4 shadow-md">
               <div className="flex space-x-1.5">
-                <div className="w-2 h-2 bg-indigo-900 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-indigo-900 rounded-full animate-pulse delay-75"></div>
-                <div className="w-2 h-2 bg-indigo-900 rounded-full animate-pulse delay-150"></div>
+                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
               </div>
-              <span className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">ক্লিনিক্যাল ডেটা প্রসেসিং...</span>
+              <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">লক্ষণ বিশ্লেষণ করা হচ্ছে...</span>
             </div>
           </div>
         )}
         <div ref={scrollRef} />
       </div>
 
-      {/* Clinical Input Field */}
-      <div className="p-4 bg-white border-t border-slate-100 pb-10 shadow-lg">
-        <div className="flex space-x-3 max-w-3xl mx-auto relative">
+      {/* Professional Input Footer */}
+      <div className="p-4 bg-white border-t border-slate-100 pb-10 shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
+        <div className="flex space-x-3 max-w-2xl mx-auto relative">
+          <div className="absolute -top-12 left-0 right-0 flex justify-center pointer-events-none">
+             <div className="bg-indigo-900 border border-indigo-800 px-4 py-1.5 rounded-full flex items-center space-x-2 shadow-xl">
+               <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
+               <span className="text-[10px] font-black text-indigo-50 uppercase tracking-widest">ভ্যারিফাইড মেডিকেল এআই</span>
+             </div>
+          </div>
           <input 
             type="text"
-            className="flex-1 bg-slate-100 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-xl px-6 py-4 text-sm transition-all outline-none font-medium"
-            placeholder="উপসর্গসমূহ ইনপুট দিন (উদা: শ্বাসকষ্ট, উচ্চ জ্বর)..."
+            className="flex-1 bg-slate-100 border-2 border-transparent focus:border-indigo-500 focus:bg-white rounded-2xl px-6 py-4 text-sm transition-all outline-none shadow-inner font-medium"
+            placeholder="আপনার শারীরিক সমস্যার বিস্তারিত বিবরণ দিন..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
@@ -146,14 +157,14 @@ const AIDoctor: React.FC<AIDoctorProps> = ({ user }) => {
           <button 
             onClick={() => handleSend()}
             disabled={isThinking}
-            className="bg-indigo-950 hover:bg-indigo-900 text-white p-5 rounded-xl disabled:opacity-50 shadow-md active:scale-95 transition-all border-b-4 border-indigo-800"
+            className="bg-indigo-950 hover:bg-indigo-900 text-white p-5 rounded-2xl disabled:opacity-50 shadow-xl transform active:scale-95 transition-all flex items-center justify-center border-b-4 border-indigo-800"
           >
             <Send className="w-5 h-5" />
           </button>
         </div>
-        <div className="mt-4 flex items-center justify-center space-x-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-indigo-600"></div>
-          <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter italic">এই পরামর্শ শুধুমাত্র তথ্যগত সহায়তার জন্য। জরুরি চিকিৎসায় সরাসরি হাসপাতালের সাহায্য নিন।</span>
+        <div className="mt-4 flex items-center justify-center space-x-2 opacity-50">
+          <Info className="w-3 h-3 text-slate-400" />
+          <span className="text-[9px] font-bold text-slate-500 uppercase">এটি একটি পরিপূরক পরামর্শ ব্যবস্থা মাত্র।</span>
         </div>
       </div>
     </div>

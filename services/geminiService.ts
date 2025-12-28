@@ -31,21 +31,19 @@ export const getAIDoctorAdvice = async (symptoms: string) => {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `User reports these symptoms: "${symptoms}". 
-      Task:
-      1. Perform a clinical assessment based on the provided symptoms.
-      2. Respond in a strictly professional, clinical, and formal Bangla tone.
-      3. Structure advice using clear bullet points.
-      4. Categorize triage urgency: (Critical Emergency / Prompt Medical Consultation / Routine Management).
-      5. Include specific first aid or diagnostic steps.
-      6. Eliminate all empathetic filler or conversational reassurance.`,
+      contents: `The user reports: "${symptoms}". 
+      1. Provide a professional clinical assessment based on these symptoms.
+      2. Respond with deep empathy and professional respect.
+      3. Use precise medical terminology in Bangla where appropriate, but keep instructions simple.
+      4. Use structured, point-wise professional advice.
+      5. Explicitly state the level of urgency (Emergency vs. Home Care).`,
       config: {
-        systemInstruction: "আপনি 'ডাক্তার আছে? এআই' (Doctor Ache? AI)। আপনি একজন বিশেষজ্ঞ মেডিকেল কনসালট্যান্ট এআই। আপনার ভাষা হবে অত্যন্ত পেশাদার, সুশৃঙ্খল এবং তথ্যভিত্তিক। আপনি কোনো প্রকার ব্যক্তিগত আবেগ বা সহমর্মিতা প্রকাশ করবেন না। আপনার উত্তরগুলো হবে সংক্ষিপ্ত এবং ক্লিনিক্যাল প্রটোকল অনুযায়ী সঠিক। জরুরি অবস্থায় সরাসরি হাসপাতালের সাহায্য নিতে নির্দেশ দিন।"
+        systemInstruction: "আপনি 'ডাক্তার আছে? এআই' (Doctor Ache? AI)। আপনি একজন অত্যন্ত দক্ষ এবং পেশাদার মেডিকেল কনসালট্যান্ট। আপনার কথা বলার ধরণ হবে মার্জিত, পেশাদার এবং গভীর সহমর্মিতাপূর্ণ। আপনি সর্বদা ইউজারের অসুস্থতাকে গুরুত্ব দেবেন এবং বৈজ্ঞানিক দৃষ্টিভঙ্গি থেকে সঠিক ও সুশৃঙ্খল পরামর্শ দেবেন। অপ্রয়োজনীয় আবেগ পরিহার করে বাস্তবসম্মত এবং কার্যকর সমাধান দিন।"
       }
     });
     return response.text;
   } catch (error) {
-    return "সিস্টেম ত্রুটি। বিস্তারিত পরামর্শ প্রদান করা সম্ভব হচ্ছে না। জরুরি সমস্যায় সরাসরি নিকটস্থ হাসপাতালে যোগাযোগ করুন।";
+    return "দুঃখিত, বর্তমানে টেকনিক্যাল সমস্যার কারণে আমি বিস্তারিত পরামর্শ দিতে পারছি না। অনুগ্রহ করে শান্ত থাকুন এবং গুরুতর সমস্যায় নিকটস্থ জরুরি বিভাগে যোগাযোগ করুন। আপনার সুস্বাস্থ্য আমাদের কাম্য।";
   }
 };
 
@@ -53,14 +51,14 @@ export const getAIMentalSupport = async (input: string) => {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `User distress input: "${input}". Provide clinical stress management protocol in Bangla.`,
+      contents: `User is distressed: "${input}". Provide calming, empathetic support in Bangla. Focus on stress reduction.`,
       config: {
-        systemInstruction: "আপনি একজন ক্লিনিক্যাল সাইকোলজিস্ট। দুর্যোগের সময় মানুষের মানসিক অবস্থা স্থিতিশীল রাখতে বৈজ্ঞানিক গাইডলাইন প্রদান করুন। ভাষা হবে পেশাদার এবং নির্দেশনামূলক।"
+        systemInstruction: "আপনি একজন ট্রমা-ইনফর্মড কাউন্সিলর। দুর্যোগের সময় মানুষের মানসিক চাপ কমাতে সাহায্য করুন। আপনার ভাষা হবে অত্যন্ত শান্ত এবং আশ্বাসদায়ক।"
       }
     });
     return response.text;
   } catch (error) {
-    return "গভীর শ্বাস নিন। ক্লিনিক্যাল প্রটোকল অনুসরণ করুন।";
+    return "ধীরগতিতে শ্বাস নিন। আপনি একা নন, আমরা আপনার পাশে আছি।";
   }
 };
 
@@ -68,7 +66,7 @@ export const predictMeshReliability = async (connectivityData: any) => {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: "Analyze mesh node density and predict reliability score.",
+      contents: "Predict mesh reliability score.",
       config: {
         responseMimeType: "application/json",
         responseSchema: {

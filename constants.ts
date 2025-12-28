@@ -6,7 +6,7 @@ export const STRINGS = {
   nav_map: 'মানচিত্র',
   nav_mesh: 'মেস নেটওয়ার্ক',
   nav_alerts: 'সতর্কতা',
-  nav_doctor: 'মেডিকেল এআই',
+  nav_doctor: 'ডাক্তার আছে? এআই',
   nav_firstaid: 'চিকিৎসা',
   nav_disaster: 'দুর্যোগ ব্যবস্থাপনা',
   nav_mental: 'মানসিক প্রশান্তি',

@@ -77,8 +77,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         <div className="flex justify-around items-center h-24 min-w-full px-4">
           <NavButton active={currentView === 'map'} onClick={() => setCurrentView('map')} icon={<MapIcon className="w-6 h-6" />} label={STRINGS.nav_map} />
           <NavButton active={currentView === 'chat'} onClick={() => setCurrentView('chat')} icon={<MessageSquare className="w-6 h-6" />} label={STRINGS.nav_mesh} />
-          <NavButton active={currentView === 'doctor'} onClick={() => setCurrentView('doctor')} icon={<ClipboardList className="w-6 h-6" />} label="মেডিকেল এআই" />
-          <NavButton active={currentView === 'firstaid'} onClick={() => setCurrentView('firstaid')} icon={<Activity className="w-6 h-6" />} label="চিকিৎসা" />
+          <NavButton active={currentView === 'doctor'} onClick={() => setCurrentView('doctor')} icon={<Heart className="w-6 h-6" />} label="ডাক্তার এআই" />
+          <NavButton active={currentView === 'firstaid'} onClick={() => setCurrentView('firstaid'} icon={<Activity className="w-6 h-6" />} label="চিকিৎসা" />
           <NavButton active={currentView === 'profile'} onClick={() => setCurrentView('profile')} icon={<UserIcon className="w-6 h-6" />} label={STRINGS.nav_profile} />
         </div>
       </nav>
