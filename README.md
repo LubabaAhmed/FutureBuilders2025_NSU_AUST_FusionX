@@ -72,7 +72,13 @@ AI Doctor:* Chat with an AI assistant for medical guidance
 - Frontend:React Native (Mobile App)  
 - Backend:Node.js / Firebase  
 - Database:** Firestore / Cloud Storage  
-- Deployment:** AI Studio  
+- Deployment:** AI Studio
+
+# Scan Me
+
+
+
+
 
 
 # UI
