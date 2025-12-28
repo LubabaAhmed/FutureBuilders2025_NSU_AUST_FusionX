@@ -48,7 +48,7 @@ Healthcare in rural and hill-tract regions of Bangladesh is often inaccessible. 
 - Offline support for low-connectivity areas
 - Location-based nearest hospital finder
 
-#Goals:
+# Goals:
 Ensuring the healthcare of underserved people of rural and hill areas.The Healthcare will be trustworthy and not time consuming during long travel distance
 
 # Features 
