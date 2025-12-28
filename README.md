@@ -47,9 +47,9 @@ Department of Electrical and Computer Engineering
 # AI Tools Disclosure
 | AI Tools | Link |
 |------------|-------|
-| Google AI Tools | (https://chatgpt.com/) |
-| Google Gemini Pro|  |
-| ChatGpt |  |
+| Google AI Studio |(https://aistudio.google.com/) |
+| Google Gemini Pro|(https://gemini.google.com/app)  |
+| ChatGpt | (https://chatgpt.com/)  |
 | VS Code |  |
 
 
