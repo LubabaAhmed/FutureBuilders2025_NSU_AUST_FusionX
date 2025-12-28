@@ -1,208 +1,217 @@
 
 import React, { useState } from 'react';
-import { Activity, Search, ChevronRight, Heart, Wind, ShieldAlert, HeartHandshake, ArrowLeft, Thermometer, BriefcaseMedical, Baby, HeartPulse, Stethoscope } from 'lucide-react';
+import { 
+  Activity, 
+  Search, 
+  ChevronRight, 
+  Heart, 
+  ShieldAlert, 
+  HeartHandshake, 
+  ArrowLeft, 
+  BriefcaseMedical, 
+  Mountain, 
+  Flame, 
+  Ghost, 
+  Scissors, 
+  Zap,
+  Info
+} from 'lucide-react';
 import { FIRST_AID_DATA } from '../constants';
 import { FirstAidStep } from '../types';
 import MentalHealth from './MentalHealth';
 
+type MedicalView = 'hub' | 'first-aid-list' | 'disaster-list' | 'mental-health' | 'detail';
+
 const FirstAid: React.FC = () => {
+  const [view, setView] = useState<MedicalView>('hub');
+  const [selectedItem, setSelectedItem] = useState<FirstAidStep | null>(null);
   const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState<FirstAidStep | null>(null);
-  const [showMentalHealth, setShowMentalHealth] = useState(false);
-  const [activeTab, setActiveTab] = useState<'all' | 'injury' | 'natural-disaster' | 'medical'>('all');
 
-  const filtered = FIRST_AID_DATA.filter(item => {
-    const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase()) || 
-                         item.description.toLowerCase().includes(search.toLowerCase());
-    const matchesTab = activeTab === 'all' || item.category === activeTab;
-    return matchesSearch && matchesTab;
-  });
+  const firstAidItems = FIRST_AID_DATA.filter(item => item.category !== 'natural-disaster');
+  const disasterItems = FIRST_AID_DATA.filter(item => item.category === 'natural-disaster');
 
-  const getIcon = (title: string) => {
-    if (title.includes('গর্ভবতী')) return <Baby className="w-6 h-6" />;
-    if (title.includes('হার্ট')) return <HeartPulse className="w-6 h-6" />;
-    if (title.includes('রক্তক্ষরণ')) return <Activity className="w-6 h-6" />;
-    if (title.includes('রোগীর সেবা')) return <Stethoscope className="w-6 h-6" />;
-    return <BriefcaseMedical className="w-6 h-6" />;
+  const filteredItems = (view === 'first-aid-list' ? firstAidItems : disasterItems).filter(item =>
+    item.title.toLowerCase().includes(search.toLowerCase()) || 
+    item.description.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleItemSelect = (item: FirstAidStep) => {
+    setSelectedItem(item);
+    setView('detail');
   };
 
-  if (showMentalHealth) {
+  const getIcon = (id: string) => {
+    switch(id) {
+      case 'burns': return <Flame className="w-6 h-6" />;
+      case 'choking': return <Ghost className="w-6 h-6" />;
+      case 'cuts': return <Scissors className="w-6 h-6" />;
+      case 'fainting': return <Zap className="w-6 h-6" />;
+      default: return <Activity className="w-6 h-6" />;
+    }
+  };
+
+  if (view === 'hub') {
     return (
-      <div className="h-full flex flex-col animate-in slide-in-from-right duration-300">
-        <button 
-          onClick={() => setShowMentalHealth(false)}
-          className="bg-teal-600 text-white p-4 flex items-center font-bold"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" /> ফিরে যান
-        </button>
+      <div className="h-full bg-slate-50 overflow-y-auto animate-in fade-in duration-500">
+        <div className="bg-indigo-950 p-10 text-white relative overflow-hidden shadow-2xl">
+          <div className="absolute -top-10 -right-10 w-48 h-48 bg-red-600/20 rounded-full blur-3xl"></div>
+          <h2 className="text-3xl font-black italic tracking-tighter">চিকিৎসা কেন্দ্র</h2>
+          <p className="text-xs text-indigo-300 font-bold uppercase tracking-widest mt-1">Medical Hub & Safety</p>
+        </div>
+
+        <div className="p-6 space-y-6 -mt-6">
+          <HubCard 
+            title="প্রাথমিক চিকিৎসা" 
+            sub="কাটা-ছেঁড়া, পুড়া ও জরুরি সাপোর্ট" 
+            icon={<BriefcaseMedical className="w-10 h-10" />} 
+            color="bg-red-600 shadow-red-200" 
+            onClick={() => setView('first-aid-list')} 
+          />
+          <HubCard 
+            title="দুর্যোগ ব্যবস্থাপনা" 
+            sub="ঘূর্ণিঝড়, ভূমিকম্প ও ভূমিধস সুরক্ষা" 
+            icon={<Mountain className="w-10 h-10" />} 
+            color="bg-indigo-600 shadow-indigo-200" 
+            onClick={() => setView('disaster-list')} 
+          />
+          <HubCard 
+            title="মানসিক প্রশান্তি" 
+            sub="স্ট্রেস কমানো ও কাউন্সেলিং" 
+            icon={<HeartHandshake className="w-10 h-10" />} 
+            color="bg-teal-600 shadow-teal-200" 
+            onClick={() => setView('mental-health')} 
+          />
+          
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 flex items-start space-x-4 shadow-sm">
+            <Info className="w-6 h-6 text-slate-400 flex-shrink-0 mt-1" />
+            <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">
+              "জরুরি মুহূর্তে শান্ত থাকা জীবন বাঁচাতে পারে। উপরে যেকোনো একটি অপশন বেছে নিয়ে নির্দেশিকা অনুসরণ করুন।"
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'mental-health') {
+    return (
+      <div className="h-full flex flex-col">
+        <SubHeader title="মানসিক প্রশান্তি" onBack={() => setView('hub')} color="bg-teal-600" />
         <MentalHealth />
       </div>
     );
   }
 
-  return (
-    <div className="h-full bg-slate-50 flex flex-col overflow-hidden">
-      <div className="bg-red-600 p-8 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="flex items-center space-x-3 mb-1">
-          <BriefcaseMedical className="w-8 h-8" />
-          <h2 className="text-3xl font-black italic">ফার্স্ট এইড</h2>
+  if (view === 'detail' && selectedItem) {
+    return (
+      <div className="h-full bg-slate-50 flex flex-col animate-in slide-in-from-bottom duration-300">
+        <SubHeader title={selectedItem.title} onBack={() => setView(selectedItem.category === 'natural-disaster' ? 'disaster-list' : 'first-aid-list')} color={selectedItem.category === 'natural-disaster' ? 'bg-indigo-600' : 'bg-red-600'} />
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-100">
+            <p className="text-slate-500 font-bold mb-8 leading-relaxed text-lg">{selectedItem.description}</p>
+            <div className="space-y-6">
+              {selectedItem.steps.map((step, i) => (
+                <div key={i} className="flex space-x-5 group">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black flex-shrink-0 shadow-sm transition-transform group-hover:scale-110 ${selectedItem.category === 'natural-disaster' ? 'bg-indigo-600 text-white' : 'bg-red-600 text-white'}`}>
+                    {i + 1}
+                  </div>
+                  <p className="text-slate-800 font-black text-sm leading-relaxed pt-2">{step}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-10 p-5 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start space-x-4">
+              <ShieldAlert className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
+              <p className="text-[11px] font-black text-amber-900 leading-relaxed uppercase">
+                সতর্কতা: এটি শুধুমাত্র একটি প্রাথমিক নির্দেশিকা। জীবন বিপন্ন হলে দ্রুত অ্যাম্বুলেন্স (৯৯৯) কল করুন।
+              </p>
+            </div>
+          </div>
         </div>
-        <p className="text-[10px] opacity-90 font-bold uppercase tracking-widest">জরুরি চিকিৎসা সহায়িকা ও প্রটোকল</p>
-        
-        <div className="mt-6 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full bg-slate-50 flex flex-col animate-in slide-in-from-right duration-300">
+      <SubHeader 
+        title={view === 'first-aid-list' ? "প্রাথমিক চিকিৎসা" : "দুর্যোগ ব্যবস্থাপনা"} 
+        onBack={() => setView('hub')} 
+        color={view === 'first-aid-list' ? 'bg-red-600' : 'bg-indigo-600'} 
+      />
+      
+      <div className="p-6">
+        <div className="relative mb-6">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <input 
             type="text" 
-            placeholder="কি হয়েছে? (উদা: গর্ভবতী মা, হার্ট অ্যাটাক...)" 
-            className="w-full pl-12 pr-4 py-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-white placeholder:text-white/60 focus:bg-white focus:text-slate-900 focus:outline-none transition-all shadow-inner"
+            placeholder="খুঁজুন..." 
+            className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-slate-100 shadow-sm focus:ring-2 focus:ring-slate-200 outline-none transition-all"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-      </div>
 
-      <div className="flex-1 overflow-y-auto">
-        {selected ? (
-          <div className="p-6 animate-in slide-in-from-bottom duration-300">
+        <div className="space-y-4">
+          {filteredItems.map(item => (
             <button 
-              onClick={() => setSelected(null)} 
-              className="text-red-600 text-sm font-black mb-6 flex items-center bg-red-50 px-4 py-2 rounded-xl w-fit"
+              key={item.id}
+              onClick={() => handleItemSelect(item)}
+              className="w-full bg-white p-5 rounded-[1.75rem] border border-slate-100 shadow-sm flex items-center justify-between hover:bg-slate-50 transition-all active:scale-[0.98] group"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" /> তালিকা দেখুন
+              <div className="flex items-center space-x-4">
+                <div className={`p-3 rounded-2xl transition-transform group-hover:scale-110 ${view === 'first-aid-list' ? 'bg-red-50 text-red-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                  {getIcon(item.id)}
+                </div>
+                <div className="text-left">
+                  <h5 className="font-black text-slate-800 tracking-tight">{item.title}</h5>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-0.5">{item.steps.length} টি কার্যকর ধাপ</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-300" />
             </button>
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-100">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="p-3 bg-red-50 rounded-2xl text-red-600">
-                   {getIcon(selected.title)}
-                </div>
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">{selected.title}</h3>
-              </div>
-              <p className="text-slate-500 mb-8 font-medium leading-relaxed">{selected.description}</p>
-              
-              <div className="space-y-6">
-                {selected.steps.map((step, i) => (
-                  <div key={i} className="flex space-x-5 group">
-                    <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-800 flex items-center justify-center font-black flex-shrink-0 shadow-sm transition-transform group-hover:scale-110 group-hover:bg-red-600 group-hover:text-white">
-                      {i + 1}
-                    </div>
-                    <p className="text-slate-700 font-bold text-sm leading-relaxed pt-2">{step}</p>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="mt-10 p-5 bg-indigo-50 rounded-[2rem] border border-indigo-100 flex items-start space-x-4">
-                <ShieldAlert className="w-6 h-6 text-indigo-600 flex-shrink-0 mt-1" />
-                <p className="text-[11px] text-indigo-900 font-bold leading-relaxed">
-                  গুরুত্বপূর্ণ: অ্যাম্বুলেন্স আসার আগ পর্যন্ত রোগীকে শান্ত রাখুন। কোনো অবস্থাতেই ভয় দেখাবেন না। আপনার চিকিৎসা ইতিহাস (প্রোফাইল) উদ্ধারকারীদের দেখান।
-                </p>
-              </div>
+          ))}
+          {filteredItems.length === 0 && (
+            <div className="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100">
+              <Activity className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+              <p className="text-sm text-slate-400 font-bold">কোনো ফলাফল পাওয়া যায়নি</p>
             </div>
-          </div>
-        ) : (
-          <div className="p-6 space-y-8 pb-32">
-            {/* Category Dashboard */}
-            <div className="grid grid-cols-2 gap-4">
-              <CategoryCard 
-                icon={<HeartHandshake className="w-8 h-8" />} 
-                label="মানসিক প্রশান্তি" 
-                color="bg-teal-600" 
-                onClick={() => setShowMentalHealth(true)}
-              />
-              <CategoryCard 
-                icon={<Baby className="w-8 h-8" />} 
-                label="মাতৃ স্বাস্থ্য" 
-                color="bg-rose-600" 
-                onClick={() => {
-                   const item = FIRST_AID_DATA.find(f => f.title.includes('গর্ভবতী'));
-                   if(item) setSelected(item);
-                }}
-              />
-              <CategoryCard 
-                icon={<HeartPulse className="w-8 h-8" />} 
-                label="হৃদরোগ সাপোর্ট" 
-                color="bg-red-600" 
-                onClick={() => {
-                   const item = FIRST_AID_DATA.find(f => f.title.includes('হার্ট'));
-                   if(item) setSelected(item);
-                }}
-              />
-              <CategoryCard 
-                icon={<BriefcaseMedical className="w-8 h-8" />} 
-                label="জরুরি প্রটোকল" 
-                color="bg-indigo-600" 
-                onClick={() => setActiveTab('medical')}
-              />
-            </div>
-
-            {/* Filter Chips */}
-            <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
-              <Chip active={activeTab === 'all'} onClick={() => setActiveTab('all')}>সবগুলো</Chip>
-              <Chip active={activeTab === 'injury'} onClick={() => setActiveTab('injury')}>আঘাত</Chip>
-              <Chip active={activeTab === 'medical'} onClick={() => setActiveTab('medical')}>মেডিকেল</Chip>
-              <Chip active={activeTab === 'natural-disaster'} onClick={() => setActiveTab('natural-disaster')}>দুর্যোগ</Chip>
-            </div>
-            
-            <div className="space-y-4">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">শীর্ষ নির্দেশিকা ({filtered.length})</h4>
-              {filtered.map(item => (
-                <button 
-                  key={item.id}
-                  onClick={() => setSelected(item)}
-                  className="w-full bg-white p-5 rounded-[1.75rem] border border-slate-100 shadow-sm flex items-center justify-between hover:bg-slate-50 transition-all text-left active:scale-[0.98]"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-2xl ${
-                      item.category === 'injury' ? 'bg-orange-50 text-orange-600' : 
-                      item.category === 'medical' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'
-                    }`}>
-                      {getIcon(item.title)}
-                    </div>
-                    <div>
-                      <h5 className="font-black text-slate-800 tracking-tight">{item.title}</h5>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase">{item.steps.length} টি ধাপ</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-slate-300" />
-                </button>
-              ))}
-              {filtered.length === 0 && (
-                <div className="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100">
-                  <Activity className="w-12 h-12 text-slate-100 mx-auto mb-4" />
-                  <p className="text-sm text-slate-400 font-bold">কোনো ফলাফল পাওয়া যায়নি</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-const CategoryCard = ({ icon, label, color, onClick }: { icon: any, label: string, color: string, onClick: () => void }) => (
+const HubCard = ({ title, sub, icon, color, onClick }: { title: string, sub: string, icon: any, color: string, onClick: () => void }) => (
   <button 
     onClick={onClick}
-    className={`${color} p-6 rounded-[2.5rem] shadow-lg flex flex-col items-center justify-center space-y-3 text-white active:scale-95 transition-all w-full text-center group`}
+    className={`${color} w-full p-8 rounded-[3rem] shadow-xl flex items-center justify-between text-white active:scale-95 transition-all group overflow-hidden relative`}
   >
-    <div className="p-3 bg-white/20 rounded-2xl group-hover:scale-110 transition-transform">
+    <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:scale-125 transition-transform duration-700">
       {icon}
     </div>
-    <span className="text-sm font-black tracking-tight leading-tight">{label}</span>
+    <div className="flex items-center space-x-6 relative z-10">
+      <div className="bg-white/20 p-4 rounded-[1.5rem] backdrop-blur-md">
+        {icon}
+      </div>
+      <div className="text-left">
+        <h3 className="text-2xl font-black italic tracking-tighter">{title}</h3>
+        <p className="text-[10px] text-white/80 font-bold uppercase tracking-widest">{sub}</p>
+      </div>
+    </div>
+    <div className="bg-white/20 p-2 rounded-full relative z-10">
+      <ChevronRight className="w-5 h-5" />
+    </div>
   </button>
 );
 
-const Chip = ({ children, active, onClick }: { children: React.ReactNode, active: boolean, onClick: () => void }) => (
-  <button 
-    onClick={onClick}
-    className={`px-6 py-3 rounded-2xl text-xs font-black whitespace-nowrap transition-all border ${
-      active 
-      ? 'bg-slate-900 text-white border-slate-900 shadow-md' 
-      : 'bg-white text-slate-400 border-slate-100'
-    }`}
-  >
-    {children}
-  </button>
+const SubHeader = ({ title, onBack, color }: { title: string, onBack: () => void, color: string }) => (
+  <div className={`${color} p-6 flex items-center space-x-4 text-white shadow-lg sticky top-0 z-10`}>
+    <button onClick={onBack} className="bg-white/20 p-2 rounded-xl active:scale-90 transition-all">
+      <ArrowLeft className="w-6 h-6" />
+    </button>
+    <h2 className="text-xl font-black italic tracking-tight">{title}</h2>
+  </div>
 );
 
 export default FirstAid;

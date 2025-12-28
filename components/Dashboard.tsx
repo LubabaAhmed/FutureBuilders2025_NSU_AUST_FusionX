@@ -9,7 +9,10 @@ import {
   User as UserIcon, 
   Activity,
   Wifi,
-  WifiOff
+  WifiOff,
+  Sparkles,
+  Heart,
+  ClipboardList
 } from 'lucide-react';
 import EmergencyMap from './EmergencyMap';
 import MeshChat from './MeshChat';
@@ -74,7 +77,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         <div className="flex justify-around items-center h-24 min-w-full px-4">
           <NavButton active={currentView === 'map'} onClick={() => setCurrentView('map')} icon={<MapIcon className="w-6 h-6" />} label={STRINGS.nav_map} />
           <NavButton active={currentView === 'chat'} onClick={() => setCurrentView('chat')} icon={<MessageSquare className="w-6 h-6" />} label={STRINGS.nav_mesh} />
-          <NavButton active={currentView === 'doctor'} onClick={() => setCurrentView('doctor')} icon={<Stethoscope className="w-6 h-6" />} label={STRINGS.nav_doctor} />
+          <NavButton active={currentView === 'doctor'} onClick={() => setCurrentView('doctor')} icon={<ClipboardList className="w-6 h-6" />} label="মেডিকেল এআই" />
           <NavButton active={currentView === 'firstaid'} onClick={() => setCurrentView('firstaid')} icon={<Activity className="w-6 h-6" />} label="চিকিৎসা" />
           <NavButton active={currentView === 'profile'} onClick={() => setCurrentView('profile')} icon={<UserIcon className="w-6 h-6" />} label={STRINGS.nav_profile} />
         </div>
@@ -84,8 +87,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 };
 
 const NavButton = ({ active, onClick, icon, label }: any) => (
-  <button onClick={onClick} className={`flex flex-col items-center justify-center space-y-1 transition-all ${active ? 'text-red-600 scale-110' : 'text-slate-400'}`}>
-    <div className={`p-3 rounded-[1.25rem] transition-all ${active ? 'bg-red-50 shadow-md' : 'hover:bg-slate-50'}`}>{icon}</div>
+  <button onClick={onClick} className={`flex flex-col items-center justify-center space-y-1 transition-all ${active ? 'text-indigo-900 scale-110' : 'text-slate-400'}`}>
+    <div className={`p-3 rounded-[1.25rem] transition-all ${active ? 'bg-indigo-50 shadow-md' : 'hover:bg-slate-50'}`}>{icon}</div>
     <span className="text-[9px] font-black uppercase tracking-tighter">{label}</span>
   </button>
 );
