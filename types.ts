@@ -1,4 +1,22 @@
 
+export interface Contact {
+  id: string;
+  name: string;
+  phone: string;
+}
+
+export interface AppSettings {
+  notifications: boolean;
+  offlineMode: boolean;
+  theme: 'light' | 'dark';
+}
+
+export interface PrivacyProtocol {
+  shareLocation: boolean;
+  visibleToResponders: boolean;
+  dataUsageAnalytics: boolean;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -11,6 +29,9 @@ export interface User {
     conditions: string[];
     medications: string[];
   };
+  contacts: Contact[];
+  settings: AppSettings;
+  privacy: PrivacyProtocol;
 }
 
 export interface Message {
@@ -31,7 +52,7 @@ export interface SOSAlert {
   priority: 'low' | 'medium' | 'high' | 'critical';
   details: string;
   aiAssessment?: string;
-  signalStrength: number; // 0-100
+  signalStrength: number;
 }
 
 export interface Shelter {
@@ -53,7 +74,7 @@ export interface Broadcast {
   timestamp: number;
 }
 
-export type AppView = 'map' | 'chat' | 'broadcast' | 'doctor' | 'profile' | 'firstaid';
+export type AppView = 'map' | 'chat' | 'broadcast' | 'doctor' | 'profile' | 'firstaid' | 'mental-health';
 
 export interface FirstAidStep {
   id: string;

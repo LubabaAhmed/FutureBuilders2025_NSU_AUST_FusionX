@@ -1,7 +1,8 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Corrected initialization using process.env.API_KEY directly as required
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const getAIPrioritization = async (details: string) => {
   try {
@@ -22,7 +23,6 @@ export const getAIPrioritization = async (details: string) => {
     });
     return JSON.parse(response.text);
   } catch (error) {
-    console.error("AI Prioritization failed", error);
     return { priority: 'high', reasoning: 'জরুরি প্রটোকল সক্রিয় করা হয়েছে।' };
   }
 };
@@ -33,12 +33,27 @@ export const getAIDoctorAdvice = async (symptoms: string) => {
       model: "gemini-3-flash-preview",
       contents: `User reports: "${symptoms}". Provide immediate first aid steps in Bangla.`,
       config: {
-        systemInstruction: "আপনি একজন মানবিক এবং পেশাদার মেডিকেল সহকারী। আপনি দুর্যোগপ্রবণ এলাকার মানুষের জন্য সহজ এবং কার্যকর চিকিৎসাসেবা প্রদান করেন। আপনার উত্তরগুলো হবে বাংলায়, সহানুভূতিশীল এবং পয়েন্ট আকারে যাতে বিপদের সময় দ্রুত পড়া যায়।"
+        systemInstruction: "আপনি একজন পেশাদার মেডিকেল সহকারী। আপনার উত্তর হবে সহানুভূতিশীল এবং পয়েন্ট আকারে।"
       }
     });
     return response.text;
   } catch (error) {
-    return "সংযোগ বিচ্ছিন্ন। দয়া করে ক্ষতস্থানে চাপ দিন এবং নিকটস্থ হাসপাতালে পৌঁছানোর চেষ্টা করুন।";
+    return "সংযোগ বিচ্ছিন্ন। ক্ষতস্থানে চাপ দিন এবং নিকটস্থ হাসপাতালে যান।";
+  }
+};
+
+export const getAIMentalSupport = async (input: string) => {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `User is distressed: "${input}". Provide calming, empathetic support in Bangla. Focus on stress reduction.`,
+      config: {
+        systemInstruction: "আপনি একজন ট্রমা-ইনফর্মড কাউন্সিলর। দুর্যোগের সময় মানুষের মানসিক চাপ কমাতে সাহায্য করুন। আপনার ভাষা হবে অত্যন্ত শান্ত এবং আশ্বাসদায়ক।"
+      }
+    });
+    return response.text;
+  } catch (error) {
+    return "ধীরগতিতে শ্বাস নিন। আপনি একা নন, আমরা আপনার পাশে আছি।";
   }
 };
 
@@ -46,21 +61,18 @@ export const predictMeshReliability = async (connectivityData: any) => {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: "Predict mesh network reliability score.",
+      contents: "Predict mesh reliability score.",
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
-          properties: {
-            reliabilityScore: { type: Type.NUMBER },
-            optimizationTip: { type: Type.STRING }
-          },
+          properties: { reliabilityScore: { type: Type.NUMBER }, optimizationTip: { type: Type.STRING } },
           required: ["reliabilityScore", "optimizationTip"]
         }
       }
     });
     return JSON.parse(response.text);
   } catch (error) {
-    return { reliabilityScore: 75, optimizationTip: "অন্যান্য ব্যবহারকারীদের কাছাকাছি থাকুন।" };
+    return { reliabilityScore: 75, optimizationTip: "অন্যদের কাছাকাছি থাকুন।" };
   }
 };
