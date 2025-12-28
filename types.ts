@@ -5,6 +5,12 @@ export interface User {
   email: string;
   role: 'citizen' | 'responder' | 'authority';
   location?: { lat: number; lng: number };
+  medicalHistory?: {
+    bloodGroup: string;
+    allergies: string[];
+    conditions: string[];
+    medications: string[];
+  };
 }
 
 export interface Message {
@@ -25,6 +31,7 @@ export interface SOSAlert {
   priority: 'low' | 'medium' | 'high' | 'critical';
   details: string;
   aiAssessment?: string;
+  signalStrength: number; // 0-100
 }
 
 export interface Shelter {
@@ -46,4 +53,12 @@ export interface Broadcast {
   timestamp: number;
 }
 
-export type AppView = 'map' | 'chat' | 'broadcast' | 'doctor' | 'profile';
+export type AppView = 'map' | 'chat' | 'broadcast' | 'doctor' | 'profile' | 'firstaid';
+
+export interface FirstAidStep {
+  id: string;
+  title: string;
+  description: string;
+  steps: string[];
+  category: 'injury' | 'natural-disaster' | 'medical';
+}
