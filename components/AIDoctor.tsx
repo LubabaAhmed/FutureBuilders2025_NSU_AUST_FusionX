@@ -11,7 +11,7 @@ interface AIDoctorProps {
 
 const AIDoctor: React.FC<AIDoctorProps> = ({ user }) => {
   const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([
-    { role: 'ai', text: `স্বাগতম ${user.name}। আমি আপনার 'ভার্চুয়াল কনসালট্যান্ট'।\n\nআপনার যদি কোনো শারীরিক অস্বস্তি বা লক্ষণ দেখা দেয়, তবে আমাকে বিস্তারিত বলুন। আমি আপনার লক্ষণগুলো বিশ্লেষণ (Symptom Checking) করে প্রয়োজনীয় প্রাথমিক পরামর্শ দিতে প্রস্তুত।\n\nআপনি চাইলে নিচের সাধারণ লক্ষণগুলো থেকে একটি বেছে নিতে পারেন অথবা আপনার সমস্যাটি লিখে জানাতে পারেন।` }
+    { role: 'ai', text: `${user.name}, আপনার কোনো শারীরিক অস্বস্তি বা লক্ষণ থাকলে আমাকে বিস্তারিত বলুন। আমি আপনার লক্ষণগুলো বিশ্লেষণ (Symptom Checking) করে প্রয়োজনীয় প্রাথমিক পরামর্শ দিতে প্রস্তুত।\n\nআপনি চাইলে নিচের সাধারণ লক্ষণগুলো থেকে একটি বেছে নিতে পারেন অথবা আপনার সমস্যাটি লিখে জানাতে পারেন।` }
   ]);
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);

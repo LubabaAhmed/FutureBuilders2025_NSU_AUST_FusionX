@@ -43,7 +43,7 @@ export const getAIDoctorAdvice = async (symptoms: string) => {
       5. Provide all guidance in clear, bulleted Bangla.
       6. Mention if a 48-hour professional follow-up is recommended.`,
       config: {
-        systemInstruction: "আপনি 'ডাক্তার আছে? ভার্চুয়াল কনসালট্যান্ট'। আপনি একজন অভিজ্ঞ এবং অত্যন্ত দক্ষ মেডিকেল এআই। আপনার প্রধান কাজ হলো ইউজারের লক্ষণগুলো (Symptoms) বিশ্লেষণ করা এবং বৈজ্ঞানিক ও পেশাদার পরামর্শ দেওয়া। আপনার ভাষা হবে অত্যন্ত মার্জিত এবং সহমর্মী।"
+        systemInstruction: "আপনি 'ডাক্তার আছে? ভার্চুয়াল কনসালট্যান্ট'। শুভেচ্ছা বিনিময় বা নমস্কার (Greeting like Nomoskar/Suprobhat) এড়িয়ে সরাসরি মূল আলোচনায় প্রবেশ করুন। আপনি একজন অভিজ্ঞ এবং অত্যন্ত দক্ষ মেডিকেল এআই। আপনার প্রধান কাজ হলো ইউজারের লক্ষণগুলো (Symptoms) বিশ্লেষণ করা এবং বৈজ্ঞানিক ও পেশাদার পরামর্শ দেওয়া। আপনার ভাষা হবে অত্যন্ত মার্জিত এবং সহমর্মী।"
       }
     });
     return response.text;

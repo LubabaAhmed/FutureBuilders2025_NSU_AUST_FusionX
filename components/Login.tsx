@@ -39,7 +39,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           bloodGroup: 'O+',
           allergies: [],
           conditions: [],
-          medications: []
+          medications: [],
+          previousMedications: []
         },
         contacts: [],
         settings: {

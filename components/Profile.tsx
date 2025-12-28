@@ -30,9 +30,12 @@ import {
   Camera,
   ShieldCheck,
   Award,
-  ArrowLeft
+  ArrowLeft,
+  LifeBuoy,
+  Users,
+  History
 } from 'lucide-react';
-import { STRINGS, PREDEFINED_ALLERGIES, PREDEFINED_CONDITIONS, PUBLIC_EMERGENCY_CONTACTS } from '../constants';
+import { STRINGS, PREDEFINED_ALLERGIES, PREDEFINED_CONDITIONS, PREDEFINED_MEDICINES, PUBLIC_EMERGENCY_CONTACTS } from '../constants';
 
 interface ProfileProps {
   user: User;
@@ -48,6 +51,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
   const [newAllergy, setNewAllergy] = useState('');
   const [newCondition, setNewCondition] = useState('');
   const [newMedication, setNewMedication] = useState('');
+  const [newPreviousMedication, setNewPreviousMedication] = useState('');
   const [newContact, setNewContact] = useState({ name: '', phone: '' });
 
   const [editUserId, setEditUserId] = useState(user.userId);
@@ -87,26 +91,42 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
     setTimeout(() => setCredMessage(''), 3000);
   };
 
-  const removeItem = (type: 'allergies' | 'conditions' | 'medications', index: number) => {
+  const removeItem = (type: 'allergies' | 'conditions' | 'medications' | 'previousMedications', index: number) => {
     if (!currentUser.medicalHistory) return;
     const history = { ...currentUser.medicalHistory };
     history[type] = history[type].filter((_, i) => i !== index);
     saveUser({ ...currentUser, medicalHistory: history });
   };
 
-  const addItem = (type: 'allergies' | 'conditions' | 'medications') => {
+  const togglePredefined = (type: 'allergies' | 'conditions' | 'medications' | 'previousMedications', item: string) => {
+    if (!currentUser.medicalHistory) return;
+    const history = { ...currentUser.medicalHistory };
+    const currentList = history[type];
+    if (currentList.includes(item)) {
+      history[type] = currentList.filter(i => i !== item);
+    } else {
+      history[type] = [...currentList, item];
+    }
+    saveUser({ ...currentUser, medicalHistory: history });
+  };
+
+  const addItem = (type: 'allergies' | 'conditions' | 'medications' | 'previousMedications') => {
     let textToAdd = '';
     if (type === 'allergies') textToAdd = newAllergy.trim();
     if (type === 'conditions') textToAdd = newCondition.trim();
     if (type === 'medications') textToAdd = newMedication.trim();
+    if (type === 'previousMedications') textToAdd = newPreviousMedication.trim();
+    
     if (!textToAdd || !currentUser.medicalHistory) return;
     if (currentUser.medicalHistory[type].includes(textToAdd)) return;
     const history = { ...currentUser.medicalHistory };
     history[type] = [...history[type], textToAdd];
     saveUser({ ...currentUser, medicalHistory: history });
+    
     if (type === 'allergies') setNewAllergy('');
     if (type === 'conditions') setNewCondition('');
     if (type === 'medications') setNewMedication('');
+    if (type === 'previousMedications') setNewPreviousMedication('');
   };
 
   const toggleSetting = (key: keyof User['settings']) => {
@@ -136,36 +156,124 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
   if (screen === 'medical') {
     return (
       <div className="h-full bg-slate-50 flex flex-col overflow-y-auto animate-in slide-in-from-right duration-300 pb-20">
-        <SubHeader title="চিকিৎসা তথ্য" onBack={() => setScreen('main')} color="bg-red-600" />
-        <div className="p-6 space-y-6">
-          <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-red-50 space-y-8">
-            <section>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">রক্তের গ্রুপ</p>
-              <div className="grid grid-cols-4 gap-3">
-                {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (
-                  <button key={bg} onClick={() => saveUser({...currentUser, medicalHistory: {...currentUser.medicalHistory!, bloodGroup: bg}})}
-                    className={`py-4 text-sm font-black rounded-2xl border transition-all ${currentUser.medicalHistory?.bloodGroup === bg ? 'bg-red-600 text-white border-red-600 shadow-lg scale-105' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-red-200'}`}>
-                    {bg}
-                  </button>
-                ))}
-              </div>
-            </section>
-            <section className="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100/50">
-              <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-4">অ্যালার্জি ও সেনসিটিভিটি</p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {currentUser.medicalHistory?.allergies.map((item, i) => (
-                  <span key={i} className="bg-white text-blue-700 px-4 py-2 rounded-xl text-[11px] font-black flex items-center shadow-sm border border-blue-100">
-                    {item} <button onClick={() => removeItem('allergies', i)} className="ml-2 text-red-400"><X className="w-3 h-3" /></button>
-                  </span>
-                ))}
-              </div>
-              <div className="flex space-x-2">
-                <input type="text" placeholder="যোগ করুন..." className="flex-1 bg-white border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-sm"
-                  onChange={(e) => setNewAllergy(e.target.value)} value={newAllergy} onKeyDown={(e) => e.key === 'Enter' && addItem('allergies')} />
-                <button onClick={() => addItem('allergies')} className="bg-blue-600 text-white p-3 rounded-xl shadow-lg"><Plus className="w-5 h-5" /></button>
-              </div>
-            </section>
-          </div>
+        <SubHeader title="চিকিৎসা তথ্য সম্পাদনা" onBack={() => setScreen('main')} color="bg-red-600" />
+        <div className="p-6 space-y-8">
+          {/* Blood Group */}
+          <section className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-red-50">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">রক্তের গ্রুপ</p>
+            <div className="grid grid-cols-4 gap-3">
+              {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (
+                <button key={bg} onClick={() => saveUser({...currentUser, medicalHistory: {...currentUser.medicalHistory!, bloodGroup: bg}})}
+                  className={`py-4 text-sm font-black rounded-2xl border transition-all ${currentUser.medicalHistory?.bloodGroup === bg ? 'bg-red-600 text-white border-red-600 shadow-lg scale-105' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-red-200'}`}>
+                  {bg}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* Allergies Section */}
+          <section className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-blue-50">
+            <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-4">সাধারণ অ্যালার্জি বাছাই করুন</p>
+            <div className="flex flex-wrap gap-2 mb-6">
+              {PREDEFINED_ALLERGIES.map(item => (
+                <button 
+                  key={item} 
+                  onClick={() => togglePredefined('allergies', item)}
+                  className={`px-4 py-2 rounded-xl text-[11px] font-black border transition-all ${
+                    currentUser.medicalHistory?.allergies.includes(item)
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                      : 'bg-blue-50 text-blue-400 border-blue-100 hover:border-blue-300'
+                  }`}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">অন্যান্য অ্যালার্জি যোগ করুন</p>
+            <div className="flex space-x-2">
+              <input type="text" placeholder="উদা: নির্দিষ্ট ফল..." className="flex-1 bg-slate-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-inner"
+                onChange={(e) => setNewAllergy(e.target.value)} value={newAllergy} onKeyDown={(e) => e.key === 'Enter' && addItem('allergies')} />
+              <button onClick={() => addItem('allergies')} className="bg-blue-600 text-white p-3 rounded-xl shadow-lg"><Plus className="w-5 h-5" /></button>
+            </div>
+          </section>
+
+          {/* Conditions Section */}
+          <section className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-amber-50">
+            <p className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-4">দীর্ঘস্থায়ী রোগ বাছাই করুন</p>
+            <div className="flex flex-wrap gap-2 mb-6">
+              {PREDEFINED_CONDITIONS.map(item => (
+                <button 
+                  key={item} 
+                  onClick={() => togglePredefined('conditions', item)}
+                  className={`px-4 py-2 rounded-xl text-[11px] font-black border transition-all ${
+                    currentUser.medicalHistory?.conditions.includes(item)
+                      ? 'bg-amber-600 text-white border-amber-600 shadow-md'
+                      : 'bg-amber-50 text-amber-400 border-amber-100 hover:border-amber-300'
+                  }`}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">অন্যান্য রোগ যোগ করুন</p>
+            <div className="flex space-x-2">
+              <input type="text" placeholder="রোগের নাম..." className="flex-1 bg-slate-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-500 outline-none shadow-inner"
+                onChange={(e) => setNewCondition(e.target.value)} value={newCondition} onKeyDown={(e) => e.key === 'Enter' && addItem('conditions')} />
+              <button onClick={() => addItem('conditions')} className="bg-amber-600 text-white p-3 rounded-xl shadow-lg"><Plus className="w-5 h-5" /></button>
+            </div>
+          </section>
+
+          {/* Medications Section */}
+          <section className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-indigo-50">
+            <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-4">বর্তমান ওষুধসমূহ (Medications)</p>
+            <div className="flex flex-wrap gap-2 mb-6">
+              {PREDEFINED_MEDICINES.map(item => (
+                <button 
+                  key={item} 
+                  onClick={() => togglePredefined('medications', item)}
+                  className={`px-4 py-2 rounded-xl text-[11px] font-black border transition-all ${
+                    currentUser.medicalHistory?.medications.includes(item)
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                      : 'bg-indigo-50 text-indigo-400 border-indigo-100 hover:border-indigo-300'
+                  }`}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">অন্যান্য ওষুধ যোগ করুন</p>
+            <div className="flex space-x-2">
+              <input type="text" placeholder="ওষুধের নাম..." className="flex-1 bg-slate-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
+                onChange={(e) => setNewMedication(e.target.value)} value={newMedication} onKeyDown={(e) => e.key === 'Enter' && addItem('medications')} />
+              <button onClick={() => addItem('medications')} className="bg-indigo-600 text-white p-3 rounded-xl shadow-lg"><Plus className="w-5 h-5" /></button>
+            </div>
+          </section>
+
+          {/* Previous Medications Section */}
+          <section className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-100">
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">অতীতের ওষুধ (Previous Medications)</p>
+            <div className="flex flex-wrap gap-2 mb-6">
+              {PREDEFINED_MEDICINES.map(item => (
+                <button 
+                  key={item} 
+                  onClick={() => togglePredefined('previousMedications', item)}
+                  className={`px-4 py-2 rounded-xl text-[11px] font-black border transition-all ${
+                    currentUser.medicalHistory?.previousMedications?.includes(item)
+                      ? 'bg-slate-600 text-white border-slate-600 shadow-md'
+                      : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-slate-300'
+                  }`}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">অন্য কোনো অতীতের ওষুধ</p>
+            <div className="flex space-x-2">
+              <input type="text" placeholder="আগের ওষুধের নাম..." className="flex-1 bg-slate-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-slate-500 outline-none shadow-inner"
+                onChange={(e) => setNewPreviousMedication(e.target.value)} value={newPreviousMedication} onKeyDown={(e) => e.key === 'Enter' && addItem('previousMedications')} />
+              <button onClick={() => addItem('previousMedications')} className="bg-slate-600 text-white p-3 rounded-xl shadow-lg"><Plus className="w-5 h-5" /></button>
+            </div>
+          </section>
         </div>
       </div>
     );
@@ -174,45 +282,77 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
   if (screen === 'contacts') {
     return (
       <div className="h-full bg-slate-50 flex flex-col overflow-y-auto animate-in slide-in-from-right duration-300 pb-20">
-        <SubHeader title="জরুরি কন্টাক্ট" onBack={() => setScreen('main')} color="bg-teal-600" />
-        <div className="p-6 space-y-6">
-          <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-teal-50 space-y-8">
-            <div className="space-y-4">
-              {currentUser.contacts.map(c => (
-                <div key={c.id} className="flex items-center justify-between p-5 bg-slate-50 rounded-[1.5rem] border border-slate-100">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-black text-lg shadow-inner">
-                      {c.name[0]}
-                    </div>
-                    <div>
-                      <p className="font-black text-slate-800 text-base">{c.name}</p>
-                      <p className="text-sm text-slate-500 font-medium">{c.phone}</p>
-                    </div>
-                  </div>
-                  <button onClick={() => removeContact(c.id)} className="p-3 text-slate-300 hover:text-red-500">
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
+        <SubHeader title="যোগাযোগ ও জরুরি সেবা" onBack={() => setScreen('main')} color="bg-teal-600" />
+        <div className="p-6 space-y-8">
+          
+          {/* Public Emergency Contacts - New Quick Access Section */}
+          <section>
+            <div className="flex items-center space-x-2 mb-4 ml-4">
+              <LifeBuoy className="w-4 h-4 text-red-500" />
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">জাতীয় ও আন্তর্জাতিক জরুরি নম্বর</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {PUBLIC_EMERGENCY_CONTACTS.map(c => (
+                <a key={c.id} href={`tel:${c.phone}`} className="bg-white p-4 rounded-3xl border border-red-50 shadow-sm flex flex-col items-center justify-center transition-all active:scale-95 group">
+                  <span className="text-[10px] font-black text-slate-800 leading-tight text-center mb-1">{c.name}</span>
+                  <span className="text-sm font-black text-red-600 group-hover:scale-110 transition-transform">{c.phone}</span>
+                </a>
               ))}
             </div>
-            <div className="bg-indigo-50/50 p-6 rounded-[2rem] border-2 border-dashed border-indigo-100">
-              <p className="text-[10px] font-black text-indigo-950 uppercase mb-4 tracking-widest">নতুন কন্টাক্ট যোগ করুন</p>
+          </section>
+
+          {/* User Personal Emergency Contacts */}
+          <section className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-teal-50 space-y-8">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-black text-teal-600 uppercase tracking-[0.2em]">আপনার ব্যক্তিগত কন্টাক্ট</p>
+              <span className="text-[10px] font-bold text-slate-300 uppercase">{currentUser.contacts.length} জন সংরক্ষিত</span>
+            </div>
+            <div className="space-y-4">
+              {currentUser.contacts.length === 0 ? (
+                <div className="py-6 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-100">
+                  <Users className="w-10 h-10 text-slate-200 mx-auto mb-2" />
+                  <p className="text-[11px] text-slate-400 font-bold uppercase">কোন কন্টাক্ট যোগ করা হয়নি</p>
+                </div>
+              ) : (
+                currentUser.contacts.map(c => (
+                  <div key={c.id} className="flex items-center justify-between p-5 bg-slate-50 rounded-[1.5rem] border border-slate-100 group">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-black text-lg shadow-inner group-hover:scale-110 transition-transform">
+                        {c.name[0]}
+                      </div>
+                      <div>
+                        <p className="font-black text-slate-800 text-base">{c.name}</p>
+                        <p className="text-sm text-slate-500 font-medium">{c.phone}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => removeContact(c.id)} className="p-3 text-slate-300 hover:text-red-500 active:scale-90 transition-all">
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+            
+            {/* Add New Contact Form */}
+            <div className="bg-indigo-50/50 p-6 rounded-[2rem] border-2 border-dashed border-indigo-100 mt-6">
+              <p className="text-[10px] font-black text-indigo-950 uppercase mb-4 tracking-widest text-center">নতুন বিশ্বস্ত কন্টাক্ট যোগ করুন</p>
               <div className="space-y-3">
-                <input type="text" placeholder="নাম" className="w-full bg-white border-none rounded-2xl px-5 py-4 text-sm outline-none shadow-sm"
+                <input type="text" placeholder="কন্টাক্ট নাম" className="w-full bg-white border-none rounded-2xl px-5 py-4 text-sm outline-none shadow-sm"
                   value={newContact.name} onChange={(e) => setNewContact({...newContact, name: e.target.value})} />
                 <input type="text" placeholder="ফোন নাম্বার" className="w-full bg-white border-none rounded-2xl px-5 py-4 text-sm outline-none shadow-sm"
                   value={newContact.phone} onChange={(e) => setNewContact({...newContact, phone: e.target.value})} />
                 <button onClick={addContact} className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl flex items-center justify-center space-x-3 shadow-xl active:scale-95 transition-all">
-                  <Plus className="w-5 h-5" /> <span>যোগ করুন</span>
+                  <Plus className="w-5 h-5" /> <span>তালিকায় যোগ করুন</span>
                 </button>
               </div>
             </div>
-          </div>
+          </section>
         </div>
       </div>
     );
   }
 
+  // Credentials, Settings, Privacy Screens
   if (screen === 'credentials') {
     return (
       <div className="h-full bg-slate-50 flex flex-col overflow-y-auto animate-in slide-in-from-right duration-300 pb-20">
@@ -251,7 +391,6 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
     );
   }
 
-  // Settings & Privacy screens
   if (screen === 'settings') {
     return (
       <div className="h-full bg-slate-50 flex flex-col overflow-y-auto animate-in slide-in-from-right duration-300 pb-20">
@@ -278,11 +417,9 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
 
   return (
     <div className="h-full bg-slate-50 flex flex-col overflow-y-auto pb-24 animate-in fade-in duration-500">
-      {/* Seamless Visual Hero Header */}
       <div className="bg-indigo-950 pt-16 pb-24 px-10 text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[80px] -mr-32 -mt-32"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/10 rounded-full blur-[80px] -ml-32 -mb-32"></div>
-        
         <div className="relative z-10">
           <div className="relative inline-block mb-6">
             <div className="w-32 h-32 bg-white rounded-[2.5rem] flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-4 border-indigo-900 rotate-2 group transition-transform hover:rotate-0 duration-500 overflow-hidden">
@@ -295,18 +432,12 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
               <ShieldCheck className="w-4 h-4 text-white" />
             </div>
           </div>
-
           <h2 className="text-4xl font-black text-white tracking-tighter italic leading-none">{currentUser.name}</h2>
           <div className="flex items-center justify-center space-x-2 mt-3">
              <div className="px-3 py-1 bg-white/10 rounded-full border border-white/20 backdrop-blur-sm">
                <span className="text-[10px] text-indigo-100 font-black uppercase tracking-widest">{currentUser.userId}</span>
              </div>
-             <div className="flex items-center space-x-1 bg-green-500/20 px-2 py-1 rounded-full border border-green-500/30">
-               <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-               <span className="text-[9px] text-green-400 font-black uppercase tracking-widest italic">Live Profile</span>
-             </div>
           </div>
-
           <div className="mt-8 grid grid-cols-3 gap-3 max-w-sm mx-auto">
              <HeroStat icon={<Award className="w-4 h-4 text-amber-400" />} label="Verified" color="bg-indigo-900/50" />
              <HeroStat icon={<Droplets className="w-4 h-4 text-red-500" />} label={currentUser.medicalHistory?.bloodGroup || 'N/A'} color="bg-indigo-900/50" />
@@ -315,10 +446,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
         </div>
       </div>
 
-      {/* Control Center - Options stacked under Header */}
       <div className="flex-1 px-6 space-y-6 -mt-10 relative z-20">
-        
-        {/* Section 1: Medical History (Highlight) */}
         <div className="space-y-3">
           <p className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.2em] ml-4 drop-shadow-sm">স্বাস্থ্যের অবস্থা</p>
           <button 
@@ -341,14 +469,13 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
           </button>
         </div>
 
-        {/* Section 2: Contacts & Protocols */}
         <div className="space-y-4">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">সুরক্ষা ও যোগাযোগ</p>
           <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden divide-y divide-slate-50">
             <ModernMenuOption 
               icon={<Shield className="w-6 h-6 text-teal-600" />} 
-              label="জরুরি কন্টাক্ট" 
-              sub="Emergency Trusted Contacts"
+              label="যোগাযোগ ও জরুরি সেবা" 
+              sub="Trusted Contacts & Hotlines"
               onClick={() => setScreen('contacts')}
               count={currentUser.contacts.length}
             />
@@ -361,7 +488,6 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
           </div>
         </div>
 
-        {/* Section 3: App & Account Settings */}
         <div className="space-y-4">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">সিস্টেম ও একাউন্ট</p>
           <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden divide-y divide-slate-50">
@@ -380,18 +506,13 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
           </div>
         </div>
 
-        {/* Logout Action */}
         <button 
           onClick={onLogout}
           className="w-full bg-white text-red-600 font-black py-6 rounded-[2.5rem] shadow-lg border border-red-100 flex items-center justify-center space-x-3 active:scale-95 transition-all group overflow-hidden relative"
         >
           <LogOut className="w-6 h-6 relative z-10" />
-          <span className="text-lg uppercase tracking-tight relative z-10">সিস্টেম থেকে লগ আউট</span>
+          <span className="text-lg uppercase tracking-tight relative z-10">লগ আউট</span>
         </button>
-
-        <div className="text-center py-6">
-           <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em]">LifeLine Secure v2.6.4</p>
-        </div>
       </div>
     </div>
   );

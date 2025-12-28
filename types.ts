@@ -21,7 +21,7 @@ export type TriageLevel = 'critical' | 'high' | 'standard' | 'low';
 
 export interface User {
   id: string;
-  userId: string; // The login identifier (Email/Username)
+  userId: string;
   password?: string;
   name: string;
   email: string;
@@ -32,6 +32,7 @@ export interface User {
     allergies: string[];
     conditions: string[];
     medications: string[];
+    previousMedications: string[];
     triageStatus?: TriageLevel;
   };
   contacts: Contact[];
@@ -92,11 +93,16 @@ export interface Broadcast {
 
 export type AppView = 'map' | 'chat' | 'broadcast' | 'doctor' | 'profile' | 'firstaid' | 'mental-health';
 
+export interface FirstAidStepDetail {
+  text: string;
+  type: 'action' | 'warning' | 'info';
+}
+
 export interface FirstAidStep {
   id: string;
   title: string;
   description: string;
-  steps: string[];
-  category: 'injury' | 'natural-disaster' | 'medical';
-  imageUrl?: string;
+  steps: FirstAidStepDetail[];
+  warningSigns?: string[];
+  category: 'injury' | 'natural-disaster' | 'medical' | 'environmental';
 }
