@@ -45,6 +45,15 @@ Department of Electrical and Computer Engineering
 # Solution Overviuew
 # Techlogies Used 
 # AI Tools Disclosure
+| AI Tools | Link |
+|------------|-------|
+| Google AI Tools | (https://chatgpt.com/) |
+| Google Gemini Pro|  |
+| ChatGpt |  |
+| VS Code |  |
+
+
+
 # How The Solution Handles limited internet Access
 # Resources
 
