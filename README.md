@@ -103,7 +103,8 @@ This is the payload sent from the physical sensor nodes in the field to the Hill
   "battery": 88                  // Percentage
 }
 
-#Project Structure
+## Project Structure
+
 HillShield/
 ├── .github/                # GitHub Actions for CI/CD and Issue Templates
 ├── assets/                 # Brand assets, screenshots, and diagrams
@@ -138,8 +139,7 @@ HillShield/
 
 
 
-
-# AI Tools Disclosure 
+## AI Tools Disclosure 
 
 | AI Tools | Website Links |
 |------------|-------|
