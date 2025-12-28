@@ -75,7 +75,12 @@ AI Doctor:* Chat with an AI assistant for medical guidance
 - Deployment:** AI Studio
 
 # Scan Me
-![Image 1](images/ডাক্তার আছে.jpeg)
+import os
+
+folder = "img"  # Folder name containing your images
+for f in os.listdir(folder):
+    if f.endswith("img.jpg"):
+        print(f"![{f}]({folder}/{c})")
 
 
 
