@@ -26,7 +26,10 @@ import {
   Thermometer,
   Lock,
   Mail,
-  Save
+  Save,
+  Camera,
+  ShieldCheck,
+  Award
 } from 'lucide-react';
 import { STRINGS, PREDEFINED_ALLERGIES, PREDEFINED_CONDITIONS, PUBLIC_EMERGENCY_CONTACTS } from '../constants';
 
@@ -54,10 +57,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
 
   const saveUser = (updated: User) => {
     setCurrentUser(updated);
-    // Persist current session
     localStorage.setItem('hillshield_user', JSON.stringify(updated));
-    
-    // Persist to account list
     const accountsRaw = localStorage.getItem('hillshield_accounts');
     if (accountsRaw) {
       const accounts: User[] = JSON.parse(accountsRaw);
@@ -74,8 +74,6 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
       setCredMessage('সবগুলো ঘর পূরণ করুন।');
       return;
     }
-
-    // Check uniqueness if ID changed
     if (editUserId !== currentUser.userId) {
        const accountsRaw = localStorage.getItem('hillshield_accounts');
        const accounts: User[] = accountsRaw ? JSON.parse(accountsRaw) : [];
@@ -84,7 +82,6 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
          return;
        }
     }
-
     const updated = { ...currentUser, userId: editUserId, password: editPassword };
     saveUser(updated);
     setCredMessage('সফলভাবে আপডেট করা হয়েছে!');
@@ -103,543 +100,248 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout }) => {
     if (type === 'allergies') textToAdd = newAllergy.trim();
     if (type === 'conditions') textToAdd = newCondition.trim();
     if (type === 'medications') textToAdd = newMedication.trim();
-
     if (!textToAdd || !currentUser.medicalHistory) return;
-    
-    if (currentUser.medicalHistory[type].includes(textToAdd)) {
-      if (type === 'allergies') setNewAllergy('');
-      if (type === 'conditions') setNewCondition('');
-      if (type === 'medications') setNewMedication('');
-      return;
-    }
-
+    if (currentUser.medicalHistory[type].includes(textToAdd)) return;
     const history = { ...currentUser.medicalHistory };
     history[type] = [...history[type], textToAdd];
     saveUser({ ...currentUser, medicalHistory: history });
-    
     if (type === 'allergies') setNewAllergy('');
     if (type === 'conditions') setNewCondition('');
     if (type === 'medications') setNewMedication('');
   };
 
-  const togglePredefined = (type: 'allergies' | 'conditions', value: string) => {
-    if (!currentUser.medicalHistory) return;
-    const history = { ...currentUser.medicalHistory };
-    if (history[type].includes(value)) {
-      history[type] = history[type].filter(i => i !== value);
-    } else {
-      history[type] = [...history[type], value];
-    }
-    saveUser({ ...currentUser, medicalHistory: history });
-  };
-
-  const removeContact = (id: string) => {
-    saveUser({
-      ...currentUser,
-      contacts: currentUser.contacts.filter(c => c.id !== id)
-    });
-  };
-
-  const addContact = () => {
-    if (!newContact.name.trim() || !newContact.phone.trim()) return;
-    const contact: Contact = {
-      id: Date.now().toString(),
-      name: newContact.name.trim(),
-      phone: newContact.phone.trim()
-    };
-    saveUser({
-      ...currentUser,
-      contacts: [...currentUser.contacts, contact]
-    });
-    setNewContact({ name: '', phone: '' });
-  };
-
   const toggleSetting = (key: keyof User['settings']) => {
-    saveUser({
-      ...currentUser,
-      settings: { ...currentUser.settings, [key]: !currentUser.settings[key] }
-    });
+    saveUser({ ...currentUser, settings: { ...currentUser.settings, [key]: !currentUser.settings[key] } });
   };
 
   const togglePrivacy = (key: keyof User['privacy']) => {
-    saveUser({
-      ...currentUser,
-      privacy: { ...currentUser.privacy, [key]: !currentUser.privacy[key] }
-    });
+    saveUser({ ...currentUser, privacy: { ...currentUser.privacy, [key]: !currentUser.privacy[key] } });
   };
 
-  const renderMedical = () => (
-    <div className="flex-1 p-6 space-y-6 animate-in slide-in-from-right duration-200">
-      <div className="flex items-center space-x-4 mb-4">
-        <button onClick={() => setScreen('main')} className="bg-white p-2 rounded-xl shadow-sm text-red-600 hover:bg-red-50 transition-colors">
-          <ChevronRight className="w-5 h-5 rotate-180" />
-        </button>
-        <h2 className="text-xl font-black text-slate-800">চিকিৎসা তথ্য আপডেট</h2>
-      </div>
-      
-      <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-10">
-        <section>
-          <div className="flex items-center space-x-2 mb-4">
-            <Droplets className="w-5 h-5 text-red-600" />
-            <label className="text-sm font-black text-slate-700 uppercase tracking-widest">{STRINGS.blood_group}</label>
-          </div>
-          <div className="grid grid-cols-4 gap-3">
-            {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (
-              <button
-                key={bg}
-                onClick={() => saveUser({...currentUser, medicalHistory: {...currentUser.medicalHistory!, bloodGroup: bg}})}
-                className={`py-3 text-sm font-black rounded-2xl border transition-all ${
-                  currentUser.medicalHistory?.bloodGroup === bg 
-                  ? 'bg-red-600 text-white border-red-600 shadow-md scale-105' 
-                  : 'bg-slate-50 text-slate-500 border-slate-100 hover:border-red-200'
-                }`}
-              >
-                {bg}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="bg-blue-50/30 p-6 rounded-[2rem] border border-blue-100/50">
-          <div className="flex items-center space-x-2 mb-4">
-            <Info className="w-5 h-5 text-blue-600" />
-            <label className="text-sm font-black text-blue-900 uppercase tracking-widest">{STRINGS.allergies}</label>
-          </div>
-          
-          <div className="mb-4">
-            <p className="text-[10px] text-blue-400 mb-3 font-bold uppercase">পরামর্শিত তালিকা:</p>
-            <div className="flex flex-wrap gap-2">
-              {PREDEFINED_ALLERGIES.map(suggested => (
-                <button
-                  key={suggested}
-                  onClick={() => togglePredefined('allergies', suggested)}
-                  className={`px-4 py-2 rounded-full text-[11px] font-bold transition-all border ${
-                    currentUser.medicalHistory?.allergies.includes(suggested)
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                    : 'bg-white text-blue-400 border-blue-100'
-                  }`}
-                >
-                  {suggested}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mb-4">
-            {currentUser.medicalHistory?.allergies.map((item, i) => (
-              <span key={i} className="bg-white text-blue-700 px-4 py-2 rounded-xl text-xs font-bold flex items-center shadow-sm border border-blue-100">
-                {item}
-                <button onClick={() => removeItem('allergies', i)} className="ml-2 text-blue-300 hover:text-red-500"><X className="w-4 h-4" /></button>
-              </span>
-            ))}
-          </div>
-          
-          <div className="flex space-x-2">
-            <input 
-              type="text" 
-              placeholder="অন্যান্য অ্যালার্জি লিখুন..." 
-              className="flex-1 bg-white border-none rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-sm"
-              onKeyDown={(e) => { if(e.key === 'Enter') addItem('allergies'); }}
-              onChange={(e) => setNewAllergy(e.target.value)}
-              value={newAllergy}
-            />
-            <button onClick={() => addItem('allergies')} className="bg-blue-600 text-white p-3 rounded-2xl shadow-lg active:scale-95 transition-all">
-              <Plus className="w-6 h-6" />
-            </button>
-          </div>
-        </section>
-
-        <section className="bg-amber-50/30 p-6 rounded-[2rem] border border-amber-100/50">
-          <div className="flex items-center space-x-2 mb-4">
-            <Activity className="w-5 h-5 text-amber-600" />
-            <label className="text-sm font-black text-amber-900 uppercase tracking-widest">{STRINGS.conditions}</label>
-          </div>
-          
-          <div className="mb-4">
-            <p className="text-[10px] text-amber-400 mb-3 font-bold uppercase">পরামর্শিত তালিকা:</p>
-            <div className="flex flex-wrap gap-2">
-              {PREDEFINED_CONDITIONS.map(suggested => (
-                <button
-                  key={suggested}
-                  onClick={() => togglePredefined('conditions', suggested)}
-                  className={`px-4 py-2 rounded-full text-[11px] font-bold transition-all border ${
-                    currentUser.medicalHistory?.conditions.includes(suggested)
-                    ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
-                    : 'bg-white text-amber-400 border-amber-100'
-                  }`}
-                >
-                  {suggested}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mb-4">
-            {currentUser.medicalHistory?.conditions.map((item, i) => (
-              <span key={i} className="bg-white text-amber-700 px-4 py-2 rounded-xl text-xs font-bold flex items-center shadow-sm border border-amber-100">
-                {item}
-                <button onClick={() => removeItem('conditions', i)} className="ml-2 text-amber-300 hover:text-red-500"><X className="w-4 h-4" /></button>
-              </span>
-            ))}
-          </div>
-          
-          <div className="flex space-x-2">
-            <input 
-              type="text" 
-              placeholder="অন্যান্য রোগ লিখুন..." 
-              className="flex-1 bg-white border-none rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:ring-amber-500 outline-none shadow-sm"
-              onKeyDown={(e) => { if(e.key === 'Enter') addItem('conditions'); }}
-              onChange={(e) => setNewCondition(e.target.value)}
-              value={newCondition}
-            />
-            <button onClick={() => addItem('conditions')} className="bg-amber-600 text-white p-3 rounded-2xl shadow-lg active:scale-95 transition-all">
-              <Plus className="w-6 h-6" />
-            </button>
-          </div>
-        </section>
-
-        <section className="bg-purple-50/30 p-6 rounded-[2rem] border border-purple-100/50">
-          <div className="flex items-center space-x-2 mb-4">
-            <Pill className="w-5 h-5 text-purple-600" />
-            <label className="text-sm font-black text-purple-900 uppercase tracking-widest">{STRINGS.medications}</label>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mb-4">
-            {currentUser.medicalHistory?.medications.map((item, i) => (
-              <span key={i} className="bg-white text-purple-700 px-4 py-2 rounded-xl text-xs font-bold flex items-center shadow-sm border border-purple-100">
-                {item}
-                <button onClick={() => removeItem('medications', i)} className="ml-2 text-purple-300 hover:text-red-500"><X className="w-4 h-4" /></button>
-              </span>
-            ))}
-          </div>
-          
-          <div className="flex space-x-2">
-            <input 
-              type="text" 
-              placeholder="বর্তমান ওষুধগুলোর নাম লিখুন..." 
-              className="flex-1 bg-white border-none rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none shadow-sm"
-              onKeyDown={(e) => { if(e.key === 'Enter') addItem('medications'); }}
-              onChange={(e) => setNewMedication(e.target.value)}
-              value={newMedication}
-            />
-            <button onClick={() => addItem('medications')} className="bg-purple-600 text-white p-3 rounded-2xl shadow-lg active:scale-95 transition-all">
-              <Plus className="w-6 h-6" />
-            </button>
-          </div>
-        </section>
-      </div>
-    </div>
-  );
-
-  const renderCredentials = () => (
-    <div className="flex-1 p-6 space-y-6 animate-in slide-in-from-right duration-200">
-      <div className="flex items-center space-x-4 mb-4">
-        <button onClick={() => setScreen('main')} className="bg-white p-2 rounded-xl shadow-sm text-red-600 hover:bg-red-50 transition-colors">
-          <ChevronRight className="w-5 h-5 rotate-180" />
-        </button>
-        <h2 className="text-xl font-black text-slate-800">অ্যাকাউন্ট সেটিংস</h2>
-      </div>
-
-      <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-6">
-        {credMessage && (
-           <div className={`p-4 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center space-x-3 ${credMessage.includes('সফল') ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
-             <Check className="w-4 h-4" />
-             <span>{credMessage}</span>
-           </div>
-        )}
-
-        <div className="space-y-4">
-           <div className="space-y-2">
-             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ইউজার আইডি</label>
-             <div className="relative">
-               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-600" />
-               <input 
-                 type="text"
-                 className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-2xl font-bold outline-none transition-all"
-                 value={editUserId}
-                 onChange={(e) => setEditUserId(e.target.value)}
-               />
-             </div>
-           </div>
-
-           <div className="space-y-2">
-             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">পাসওয়ার্ড</label>
-             <div className="relative">
-               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-600" />
-               <input 
-                 type="password"
-                 className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-2xl font-bold outline-none transition-all"
-                 value={editPassword}
-                 onChange={(e) => setEditPassword(e.target.value)}
-               />
-             </div>
-           </div>
-
-           <button 
-             onClick={updateCredentials}
-             className="w-full bg-indigo-950 text-white font-black py-5 rounded-2xl shadow-xl active:scale-95 transition-all flex items-center justify-center space-x-3 border-b-4 border-black mt-4"
-           >
-             <Save className="w-5 h-5" />
-             <span>পরিবর্তন সংরক্ষণ করুন</span>
-           </button>
+  if (screen === 'medical') {
+    return (
+      <div className="h-full bg-slate-50 flex flex-col overflow-y-auto animate-in slide-in-from-right duration-300 pb-20">
+        <div className="bg-red-600 p-8 text-white flex items-center space-x-4 shadow-lg sticky top-0 z-20">
+          <button onClick={() => setScreen('main')} className="bg-white/20 p-2 rounded-xl active:scale-90 transition-all"><ChevronRight className="w-6 h-6 rotate-180" /></button>
+          <h2 className="text-xl font-black tracking-tight italic">স্বাস্থ্য প্রোফাইল</h2>
         </div>
-      </div>
-    </div>
-  );
-
-  const renderContacts = () => (
-    <div className="flex-1 p-6 space-y-6 animate-in slide-in-from-right duration-200">
-      <div className="flex items-center space-x-4 mb-4">
-        <button onClick={() => setScreen('main')} className="bg-white p-2 rounded-xl shadow-sm text-red-600 hover:bg-red-50 transition-colors">
-          <ChevronRight className="w-5 h-5 rotate-180" />
-        </button>
-        <h2 className="text-xl font-black text-slate-800">জরুরি যোগাযোগসমূহ</h2>
-      </div>
-
-      <div className="bg-red-50 rounded-[2.5rem] p-8 border border-red-100">
-        <div className="flex items-center space-x-3 mb-6">
-          <AlertCircle className="w-6 h-6 text-red-600" />
-          <h3 className="text-xl font-black text-red-700">জাতীয় জরুরি সেবা</h3>
-        </div>
-        <div className="grid grid-cols-1 gap-4">
-          {PUBLIC_EMERGENCY_CONTACTS.map(c => (
-            <div key={c.id} className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-red-50 hover:border-red-200 transition-colors">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600">
-                  <Phone className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-xs font-black text-slate-800 leading-tight mb-1">{c.name}</p>
-                  <p className="text-lg font-black text-red-600">{c.phone}</p>
-                </div>
+        <div className="p-6 space-y-6">
+          <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-red-50 space-y-8">
+            <section>
+              <div className="flex items-center space-x-2 mb-4 text-red-600">
+                <Droplets className="w-5 h-5" />
+                <span className="text-xs font-black uppercase tracking-widest">{STRINGS.blood_group}</span>
               </div>
-              <a href={`tel:${c.phone}`} className="w-12 h-12 bg-red-600 text-white rounded-xl flex items-center justify-center shadow-lg active:scale-90 transition-all">
-                <ExternalLink className="w-5 h-5" />
-              </a>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
-        <h3 className="text-xl font-black mb-8 flex items-center text-slate-800">
-          <Shield className="w-6 h-6 mr-3 text-indigo-500" /> ব্যক্তিগত কন্টাক্ট
-        </h3>
-
-        <div className="space-y-4 mb-10">
-          {currentUser.contacts.map(c => (
-            <div key={c.id} className="flex items-center justify-between p-5 bg-slate-50 rounded-[1.5rem] border border-slate-100">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-black text-lg shadow-inner">
-                  {c.name[0]}
-                </div>
-                <div>
-                  <p className="font-black text-slate-800 text-base">{c.name}</p>
-                  <p className="text-sm text-slate-500 font-medium">{c.phone}</p>
-                </div>
+              <div className="grid grid-cols-4 gap-3">
+                {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (
+                  <button key={bg} onClick={() => saveUser({...currentUser, medicalHistory: {...currentUser.medicalHistory!, bloodGroup: bg}})}
+                    className={`py-4 text-sm font-black rounded-2xl border transition-all ${currentUser.medicalHistory?.bloodGroup === bg ? 'bg-red-600 text-white border-red-600 shadow-lg scale-105' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-red-200'}`}>
+                    {bg}
+                  </button>
+                ))}
               </div>
-              <div className="flex items-center space-x-2">
-                <a href={`tel:${c.phone}`} className="p-3 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100">
-                  <Phone className="w-5 h-5" />
-                </a>
-                <button onClick={() => removeContact(c.id)} className="p-3 text-slate-300 hover:text-red-500">
-                  <X className="w-6 h-6" />
-                </button>
+            </section>
+            <section className="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100/50">
+              <div className="flex items-center space-x-2 mb-4 text-blue-600">
+                <Info className="w-5 h-5" />
+                <span className="text-xs font-black uppercase tracking-widest">অ্যালার্জি ও সেনসিটিভিটি</span>
               </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="bg-indigo-50/50 p-6 rounded-[2rem] border-2 border-dashed border-indigo-100">
-          <p className="text-xs font-black text-indigo-950 uppercase mb-4 flex items-center tracking-widest">
-            <Plus className="w-4 h-4 mr-2" /> নতুন কন্টাক্ট যোগ করুন
-          </p>
-          <div className="space-y-3">
-            <input 
-              type="text" 
-              placeholder="নাম" 
-              className="w-full bg-white border-none rounded-2xl px-5 py-4 text-sm outline-none shadow-sm focus:ring-2 focus:ring-indigo-200 transition-all"
-              value={newContact.name}
-              onChange={(e) => setNewContact({...newContact, name: e.target.value})}
-            />
-            <input 
-              type="text" 
-              placeholder="ফোন নাম্বার" 
-              className="w-full bg-white border-none rounded-2xl px-5 py-4 text-sm outline-none shadow-sm focus:ring-2 focus:ring-indigo-200 transition-all"
-              value={newContact.phone}
-              onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
-            />
-            <button 
-              onClick={addContact}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl flex items-center justify-center space-x-3 shadow-xl active:scale-95 transition-all mt-2"
-            >
-              <Plus className="w-5 h-5" /> <span>তালিকায় যোগ করুন</span>
-            </button>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {currentUser.medicalHistory?.allergies.map((item, i) => (
+                  <span key={i} className="bg-white text-blue-700 px-4 py-2 rounded-xl text-[11px] font-black flex items-center shadow-sm border border-blue-100">
+                    {item} <button onClick={() => removeItem('allergies', i)} className="ml-2 text-red-400"><X className="w-3 h-3" /></button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex space-x-2">
+                <input type="text" placeholder="যোগ করুন..." className="flex-1 bg-white border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-sm"
+                  onChange={(e) => setNewAllergy(e.target.value)} value={newAllergy} onKeyDown={(e) => e.key === 'Enter' && addItem('allergies')} />
+                <button onClick={() => addItem('allergies')} className="bg-blue-600 text-white p-3 rounded-xl shadow-lg"><Plus className="w-5 h-5" /></button>
+              </div>
+            </section>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 
-  const renderSettings = () => (
-    <div className="flex-1 p-6 space-y-6 animate-in slide-in-from-right duration-200">
-      <div className="flex items-center space-x-4 mb-4">
-        <button onClick={() => setScreen('main')} className="bg-white p-2 rounded-xl shadow-sm text-red-600 hover:bg-red-50 transition-colors">
-          <ChevronRight className="w-5 h-5 rotate-180" />
-        </button>
-        <h2 className="text-xl font-black text-slate-800">{STRINGS.settings}</h2>
-      </div>
-
-      <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
-        <div className="space-y-4">
-          <ToggleOption 
-            icon={<Bell className="w-5 h-5" />} 
-            label={STRINGS.notif_enable} 
-            active={currentUser.settings.notifications} 
-            onClick={() => toggleSetting('notifications')} 
-          />
-          <ToggleOption 
-            icon={<Activity className="w-5 h-5" />} 
-            label={STRINGS.offline_mode} 
-            active={currentUser.settings.offlineMode} 
-            onClick={() => toggleSetting('offlineMode')} 
-          />
+  if (screen === 'credentials') {
+    return (
+      <div className="h-full bg-slate-50 flex flex-col overflow-y-auto animate-in slide-in-from-right duration-300 pb-20">
+        <div className="bg-indigo-900 p-8 text-white flex items-center space-x-4 shadow-lg sticky top-0 z-20">
+          <button onClick={() => setScreen('main')} className="bg-white/20 p-2 rounded-xl active:scale-90 transition-all"><ChevronRight className="w-6 h-6 rotate-180" /></button>
+          <h2 className="text-xl font-black tracking-tight italic">অ্যাকাউন্ট সেটিংস</h2>
+        </div>
+        <div className="p-6">
+          <div className="bg-white rounded-[2.5rem] p-10 shadow-xl border border-slate-100 space-y-8">
+            <div className="flex flex-col items-center space-y-2 mb-4">
+              <div className="p-4 bg-indigo-50 rounded-2xl text-indigo-600">
+                <Lock className="w-8 h-8" />
+              </div>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">নিরাপত্তা ও অ্যাক্সেস</p>
+            </div>
+            {credMessage && (
+               <div className={`p-4 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center space-x-3 ${credMessage.includes('সফল') ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+                 <Check className="w-4 h-4" /> <span>{credMessage}</span>
+               </div>
+            )}
+            <div className="space-y-6">
+               <div className="space-y-2">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ইউজার আইডি</label>
+                 <div className="relative">
+                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-600" />
+                   <input type="text" className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-2xl font-bold outline-none transition-all"
+                     value={editUserId} onChange={(e) => setEditUserId(e.target.value)} />
+                 </div>
+               </div>
+               <div className="space-y-2">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">নতুন পাসওয়ার্ড</label>
+                 <div className="relative">
+                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-600" />
+                   <input type="password" placeholder="••••••••" className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-2xl font-bold outline-none transition-all"
+                     value={editPassword} onChange={(e) => setEditPassword(e.target.value)} />
+                 </div>
+               </div>
+               <button onClick={updateCredentials} className="w-full bg-indigo-950 text-white font-black py-5 rounded-3xl shadow-xl active:scale-95 transition-all border-b-4 border-black flex items-center justify-center space-x-3">
+                 <Save className="w-5 h-5" /> <span>সংরক্ষণ করুন</span>
+               </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
-
-  const renderPrivacy = () => (
-    <div className="flex-1 p-6 space-y-6 animate-in slide-in-from-right duration-200">
-      <div className="flex items-center space-x-4 mb-4">
-        <button onClick={() => setScreen('main')} className="bg-white p-2 rounded-xl shadow-sm text-red-600 hover:bg-red-50 transition-colors">
-          <ChevronRight className="w-5 h-5 rotate-180" />
-        </button>
-        <h2 className="text-xl font-black text-slate-800">{STRINGS.privacy}</h2>
-      </div>
-
-      <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
-        <div className="space-y-4">
-          <ToggleOption 
-            icon={<MapPin className="w-5 h-5" />} 
-            label={STRINGS.location_share} 
-            active={currentUser.privacy.shareLocation} 
-            onClick={() => togglePrivacy('shareLocation')} 
-          />
-          <ToggleOption 
-            icon={<Eye className="w-5 h-5" />} 
-            label={STRINGS.visibility} 
-            active={currentUser.privacy.visibleToResponders} 
-            onClick={() => togglePrivacy('visibleToResponders')} 
-          />
-        </div>
-      </div>
-    </div>
-  );
-
-  if (screen === 'medical') return <div className="h-full bg-slate-50 flex flex-col overflow-y-auto">{renderMedical()}</div>;
-  if (screen === 'contacts') return <div className="h-full bg-slate-50 flex flex-col overflow-y-auto">{renderContacts()}</div>;
-  if (screen === 'settings') return <div className="h-full bg-slate-50 flex flex-col overflow-y-auto">{renderSettings()}</div>;
-  if (screen === 'privacy') return <div className="h-full bg-slate-50 flex flex-col overflow-y-auto">{renderPrivacy()}</div>;
-  if (screen === 'credentials') return <div className="h-full bg-slate-50 flex flex-col overflow-y-auto">{renderCredentials()}</div>;
+    );
+  }
 
   return (
-    <div className="h-full bg-slate-50 flex flex-col overflow-y-auto">
-      <div className="bg-indigo-950 p-10 text-center relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-10">
-          <UserIcon className="w-48 h-48 text-white" />
-        </div>
-        <div className="relative">
-          <div className="w-28 h-28 bg-white rounded-[2.5rem] mx-auto mb-6 flex items-center justify-center shadow-2xl border-4 border-indigo-900 rotate-2">
-            <UserIcon className="w-14 h-14 text-indigo-950 -rotate-2" />
+    <div className="h-full bg-slate-50 flex flex-col overflow-y-auto pb-24 animate-in fade-in duration-500">
+      {/* Visual Hero Header */}
+      <div className="bg-indigo-950 pt-16 pb-24 px-10 text-center relative overflow-hidden">
+        {/* Background Decorations */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[80px] -mr-32 -mt-32"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/10 rounded-full blur-[80px] -ml-32 -mb-32"></div>
+        
+        <div className="relative z-10">
+          {/* Main Avatar Section */}
+          <div className="relative inline-block mb-6">
+            <div className="w-32 h-32 bg-white rounded-[2.5rem] flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-4 border-indigo-900 rotate-2 group transition-transform hover:rotate-0 duration-500">
+              <UserIcon className="w-16 h-16 text-indigo-950 -rotate-2 group-hover:rotate-0 transition-transform" />
+            </div>
+            <button className="absolute bottom-0 right-0 bg-red-600 text-white p-3 rounded-2xl shadow-xl border-4 border-indigo-950 hover:bg-red-700 transition-colors active:scale-90">
+              <Camera className="w-5 h-5" />
+            </button>
+            <div className="absolute -top-2 -right-2 bg-green-500 p-2 rounded-full border-4 border-indigo-950 shadow-lg">
+              <ShieldCheck className="w-4 h-4 text-white" />
+            </div>
           </div>
-          <h2 className="text-3xl font-black text-white tracking-tight">{currentUser.name}</h2>
-          <p className="text-indigo-300 text-sm font-medium mt-1">{currentUser.userId}</p>
-          <div className="mt-6 inline-flex items-center space-x-3 bg-indigo-900/50 px-4 py-2 rounded-2xl border border-indigo-800">
-            <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></div>
-            <span className="text-[11px] text-indigo-100 font-black uppercase tracking-widest">নাগরিক প্রোফাইল</span>
+
+          <h2 className="text-4xl font-black text-white tracking-tighter italic leading-none">{currentUser.name}</h2>
+          <div className="flex items-center justify-center space-x-2 mt-3">
+             <div className="px-3 py-1 bg-white/10 rounded-full border border-white/20 backdrop-blur-sm">
+               <span className="text-[10px] text-indigo-100 font-black uppercase tracking-widest">{currentUser.userId}</span>
+             </div>
+             <div className="flex items-center space-x-1 bg-green-500/20 px-2 py-1 rounded-full border border-green-500/30">
+               <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+               <span className="text-[9px] text-green-400 font-black uppercase tracking-widest">Active</span>
+             </div>
+          </div>
+
+          <div className="mt-8 grid grid-cols-3 gap-3 max-w-sm mx-auto">
+             <HeroStat icon={<Award className="w-4 h-4 text-amber-400" />} label="Verified" color="bg-indigo-900/50" />
+             <HeroStat icon={<Droplets className="w-4 h-4 text-red-500" />} label={currentUser.medicalHistory?.bloodGroup || 'N/A'} color="bg-indigo-900/50" />
+             <HeroStat icon={<MapPin className="w-4 h-4 text-indigo-400" />} label="Citizen" color="bg-indigo-900/50" />
           </div>
         </div>
       </div>
 
-      <div className="flex-1 p-6 space-y-6 -mt-6 pb-24">
-        <div 
+      {/* Profile Body Options */}
+      <div className="flex-1 px-6 space-y-6 -mt-10 relative z-20">
+        {/* Important Health Summary Card */}
+        <button 
           onClick={() => setScreen('medical')}
-          className="bg-white rounded-[2.5rem] shadow-xl p-8 border border-red-50 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all group"
+          className="w-full bg-white rounded-[2.5rem] shadow-2xl p-8 border border-red-50 flex items-center justify-between transition-all active:scale-[0.98] group overflow-hidden relative"
         >
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:scale-110 transition-transform duration-500">
-            <Heart className="w-32 h-32 text-red-600" />
+          <div className="absolute -right-6 -bottom-6 opacity-[0.03] group-hover:scale-125 transition-transform duration-700">
+             <Heart className="w-32 h-32 text-red-600" />
           </div>
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-red-100 rounded-2xl">
-                <Heart className="w-6 h-6 text-red-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-black text-slate-800">{STRINGS.medical_history}</h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">স্বাস্থ্য তথ্য</p>
-              </div>
+          <div className="flex items-center space-x-5 relative z-10">
+            <div className="p-5 bg-red-100 rounded-[1.5rem] text-red-600 shadow-inner">
+              <Heart className="w-8 h-8" />
             </div>
-            <span className="text-[10px] font-black text-red-600 uppercase bg-red-50 px-4 py-2 rounded-xl border border-red-100">সম্পাদনা</span>
+            <div className="text-left">
+              <h3 className="text-xl font-black italic tracking-tighter text-slate-900 leading-none">স্বাস্থ্য প্রোফাইল</h3>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Medical History & Vitals</p>
+            </div>
           </div>
+          <div className="flex items-center space-x-2 relative z-10">
+            <span className="text-[9px] font-black text-red-600 uppercase bg-red-50 px-3 py-1.5 rounded-full border border-red-100">সম্পাদনা</span>
+            <ChevronRight className="w-6 h-6 text-slate-200" />
+          </div>
+        </button>
 
-          <div className="space-y-4 relative z-10">
-            <div className="flex items-center justify-between p-4 bg-red-50/50 rounded-2xl border border-red-100/30">
-              <div className="flex items-center space-x-3">
-                <Droplets className="w-5 h-5 text-red-500" />
-                <span className="text-sm font-black text-slate-700">{STRINGS.blood_group}</span>
-              </div>
-              <span className="text-2xl font-black text-red-600 tracking-tighter">{currentUser.medicalHistory?.bloodGroup}</span>
-            </div>
+        {/* Sectioned Menu */}
+        <div className="space-y-4">
+          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">সিস্টেম ও একাউন্ট</h4>
+          <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
+            <ModernMenuOption 
+              icon={<Lock className="w-6 h-6 text-indigo-600" />} 
+              label="অ্যাকাউন্ট সেটিংস" 
+              sub="ইউজার আইডি ও পাসওয়ার্ড পরিবর্তন"
+              onClick={() => setScreen('credentials')}
+            />
+            <ModernMenuOption 
+              icon={<Shield className="w-6 h-6 text-teal-600" />} 
+              label="জরুরি কন্টাক্ট" 
+              sub="বিপদকালীন উদ্ধারকারীদের জন্য"
+              onClick={() => setScreen('contacts')}
+              count={currentUser.contacts.length}
+            />
+            <ModernMenuOption 
+              icon={<Eye className="w-6 h-6 text-amber-600" />} 
+              label="সুরক্ষা প্রটোকল" 
+              sub="অবস্থান ও দৃশ্যমানতা নিয়ন্ত্রণ"
+              onClick={() => setScreen('privacy')}
+            />
+            <ModernMenuOption 
+              icon={<Settings className="w-6 h-6 text-slate-600" />} 
+              label="অ্যাপ সেটিংস" 
+              sub="নোটিফিকেশন ও ইন্টারফেস"
+              onClick={() => setScreen('settings')}
+            />
           </div>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] shadow-md border border-slate-100 overflow-hidden">
-          <MenuOption 
-            icon={<Lock className="text-indigo-600" />} 
-            label="অ্যাকাউন্ট সেটিংস" 
-            sub="ইউজার আইডি ও পাসওয়ার্ড পরিবর্তন করুন"
-            onClick={() => setScreen('credentials')}
-          />
-          <MenuOption 
-            icon={<Shield className="text-indigo-600" />} 
-            label={`${STRINGS.contacts} (${currentUser.contacts.length})`} 
-            sub="জরুরি সেবার জন্য কন্টাক্ট লিস্ট"
-            onClick={() => setScreen('contacts')}
-          />
-          <MenuOption 
-            icon={<FileText className="text-amber-600" />} 
-            label={STRINGS.privacy} 
-            sub="সুরক্ষা ও দৃশ্যমানতা নিয়ন্ত্রণ"
-            onClick={() => setScreen('privacy')}
-          />
-          <MenuOption 
-            icon={<Settings className="text-slate-600" />} 
-            label={STRINGS.settings} 
-            sub="নোটিফিকেশন ও অফলাইন মেস নেটওয়ার্ক"
-            onClick={() => setScreen('settings')}
-          />
-        </div>
-
+        {/* Danger Zone */}
         <button 
           onClick={onLogout}
-          className="w-full bg-white text-red-600 font-black py-5 rounded-[2rem] shadow-sm border border-red-100 flex items-center justify-center space-x-3 active:scale-95 transition-all mb-10"
+          className="w-full bg-white text-red-600 font-black py-6 rounded-[2.5rem] shadow-lg border border-red-100 flex items-center justify-center space-x-3 active:scale-95 transition-all group overflow-hidden relative"
         >
-          <LogOut className="w-5 h-5" />
-          <span className="text-lg uppercase tracking-tight">সিস্টেম থেকে লগ আউট</span>
+          <div className="absolute left-0 w-1 bg-red-600 h-full group-hover:w-full opacity-5 transition-all duration-300"></div>
+          <LogOut className="w-6 h-6 relative z-10" />
+          <span className="text-lg uppercase tracking-tight relative z-10">সিস্টেম থেকে লগ আউট</span>
         </button>
+
+        <div className="text-center py-6">
+           <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em]">Doctor Ache? v2.5.0</p>
+        </div>
       </div>
     </div>
   );
 };
 
-const MenuOption = ({ icon, label, sub, onClick }: { icon: React.ReactNode, label: string, sub: string, onClick?: () => void }) => (
+const HeroStat = ({ icon, label, color }: any) => (
+  <div className={`${color} rounded-2xl p-3 border border-white/10 backdrop-blur-md flex flex-col items-center justify-center space-y-1`}>
+    {icon}
+    <span className="text-[9px] font-black text-white uppercase tracking-tighter">{label}</span>
+  </div>
+);
+
+const ModernMenuOption = ({ icon, label, sub, onClick, count }: any) => (
   <button 
     onClick={onClick}
-    className="w-full flex items-center justify-between p-6 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-b-0 text-left"
+    className="w-full flex items-center justify-between p-6 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-b-0 text-left group"
   >
     <div className="flex items-center space-x-5">
-      <div className="p-3 bg-slate-50 rounded-2xl">
+      <div className="p-4 bg-slate-50 rounded-[1.25rem] group-hover:bg-white group-hover:shadow-md transition-all">
         {icon}
       </div>
       <div>
@@ -647,23 +349,11 @@ const MenuOption = ({ icon, label, sub, onClick }: { icon: React.ReactNode, labe
         <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">{sub}</span>
       </div>
     </div>
-    <ChevronRight className="w-6 h-6 text-slate-300" />
-  </button>
-);
-
-const ToggleOption = ({ icon, label, active, onClick }: { icon: any, label: string, active: boolean, onClick: () => void }) => (
-  <button 
-    onClick={onClick}
-    className="w-full flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-100 transition-all active:scale-[0.98] text-left"
-  >
-    <div className="flex items-center space-x-4">
-      <div className={`p-3 rounded-2xl ${active ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-200 text-slate-500'}`}>
-        {icon}
-      </div>
-      <span className="text-sm font-black text-slate-700 tracking-tight">{label}</span>
-    </div>
-    <div className={`w-14 h-8 rounded-full relative transition-colors duration-300 ${active ? 'bg-indigo-600 shadow-inner' : 'bg-slate-300'}`}>
-      <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300 transform ${active ? 'translate-x-7' : 'translate-x-1'}`} />
+    <div className="flex items-center space-x-3">
+      {count !== undefined && (
+        <span className="bg-indigo-50 text-indigo-600 text-[10px] font-black px-3 py-1 rounded-full">{count}</span>
+      )}
+      <ChevronRight className="w-6 h-6 text-slate-200 group-hover:text-indigo-300 transition-colors" />
     </div>
   </button>
 );
