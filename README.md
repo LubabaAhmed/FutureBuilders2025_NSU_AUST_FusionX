@@ -74,20 +74,6 @@ AI Doctor:* Chat with an AI assistant for medical guidance
 - Database:** Firestore / Cloud Storage  
 - Deployment:** AI Studio
 
-# Scan Me
-import os
-
-folder = "img"  # Folder name containing your images
-for f in os.listdir(folder):
-    if f.endswith("img.jpg"):
-        print(f"![{f}]({folder}/{c})")
-
-
-
-
-
-
-
 
 # UI
 The application features a "Mission Control" style dashboard:
