@@ -18,6 +18,25 @@ View your app in AI Studio: https://ai.studio/apps/drive/1Qc9CtGr1qWyHIfI5Bnq1u6
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+   
+# Project Name 
+
+ডাক্তার আছে?AI-Powered Healthcare for Rural Bangladesh
 
 # Team Details 
+1.Ayon Rahman
+Department of Electrical & Electronic Engineering
+
+2.Raisa Juairia
+Department of Electrical and Computer Engineering
+
+3.Lubaba Ahmed
+Department of Electrical and Computer Engineering
+
+# Problem Statement 
+# Solution Overviuew
+# Techlogies Used 
+# AI Tools Disclosure
+# How The Solution Handles limited internet Access
+
 
