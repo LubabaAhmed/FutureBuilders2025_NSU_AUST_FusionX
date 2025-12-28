@@ -105,35 +105,29 @@ This is the payload sent from the physical sensor nodes in the field to the Hill
 ```
 ## Project Structure
 
-HillShield/
-├── .github/                # GitHub Actions for CI/CD and Issue Templates
-├── assets/                 # Brand assets, screenshots, and diagrams
-│   ├── branding/           # Logos and Favicons
-│   └── docs/               # UI Screenshots for README
-├── public/                 # Static files
-│   └── data/               # GeoJSON files for map terrain boundaries
+ডাক্তার আছে?
+├── public/                # Static assets
+│   ├── favicon.ico
+│   └── index.html         # The file you provided
 ├── src/
-│   ├── api/                # Service Layer
-│   │   ├── aws-rekognition.js # AWS SDK integration for Vision
-│   │   ├── gemini-ai.js    # Google Generative AI configurations
-│   │   └── iot-stream.js   # WebSocket or MQTT sensor listeners
-│   ├── components/         # Atomic UI Design
-│   │   ├── dashboard/      # Main layout panels
-│   │   ├── map/            # Leaflet logic, layers, and markers
-│   │   └── ui/             # Reusable Lucide-icon buttons and cards
-│   ├── hooks/              # Custom React logic
-│   │   ├── useRiskCalc.js  # Implementation of the Risk Formula
-│   │   └── useSensors.js   # State management for real-time telemetry
-│   ├── utils/              # Pure helper functions
-│   │   ├── constants.js    # Threshold values and API endpoints
-│   │   └── formatters.js   # Lat/Lng and Timestamp formatting
-│   ├── App.jsx             # Main Application Logic
-│   └── main.jsx            # React 19 entry point
-├── tests/                  # Unit tests for risk calculations
-├── .env.example            # Template for API Keys (AWS/Google)
-├── index.html              # Entry HTML with Import Maps
-├── package.json            # Scripts and Dependencies
-└── README.md               # Main Documentation
+│   ├── components/        # Reusable UI components
+│   │   ├── Map/
+│   │   │   ├── MapContainer.jsx
+│   │   │   └── Marker.jsx
+│   │   ├── UI/
+│   │   │   ├── Navbar.jsx
+│   │   │   └── Sidebar.jsx
+│   ├── hooks/             # Custom React hooks (e.g., useLocation)
+│   ├── services/          # API & External Logic
+│   │   ├── geminiApi.js    # Logic for @google/genai
+│   │   └── leafletConfig.js
+│   ├── styles/            # Global CSS
+│   │   └── globals.css
+│   ├── App.jsx            # Main App component & Router setup
+│   └── main.jsx           # React DOM rendering logic
+├── .env                   # API Keys (Google GenAI key)
+├── package.json           # Dependencies and scripts
+└── tailwind.config.js     # Tailwind customization
 
 
 
