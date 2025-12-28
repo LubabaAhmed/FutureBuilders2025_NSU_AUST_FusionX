@@ -1,7 +1,9 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { User, SOSAlert } from '../types';
 import { MOCK_SHELTERS } from '../constants';
+import { getNearbyHospitals } from '../services/geminiService';
+import { MapPin, Navigation, Crosshair, Loader2, Hospital } from 'lucide-react';
 
 interface MapProps {
   user: User;
@@ -11,63 +13,125 @@ interface MapProps {
 const EmergencyMap: React.FC<MapProps> = ({ user, alerts }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
+  const userMarkerRef = useRef<any>(null);
+  const [loadingLocation, setLoadingLocation] = useState(true);
+  const [currentHospitals, setCurrentHospitals] = useState<any[]>([]);
+  const [locationStatus, setLocationStatus] = useState<string>('অবস্থান খোঁজা হচ্ছে...');
 
-  useEffect(() => {
+  const initMap = (lat: number, lng: number) => {
     if (!mapContainer.current || mapInstance.current) return;
-
-    // Use specific Hill Tracts coords (Rangamati)
-    const initialLat = 22.6485;
-    const initialLng = 92.1747;
 
     const L = (window as any).L;
     mapInstance.current = L.map(mapContainer.current, {
-        zoomControl: false
-    }).setView([initialLat, initialLng], 12);
+      zoomControl: false
+    }).setView([lat, lng], 13);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
+    // Using a cleaner, high-contrast map style
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors, Humanitarian OpenStreetMap Team'
     }).addTo(mapInstance.current);
 
-    // Add zoom control to bottom right
     L.control.zoom({ position: 'bottomright' }).addTo(mapInstance.current);
 
-    // Add user marker
+    // Accurate User Location Marker
     const userIcon = L.divIcon({
-      className: 'custom-div-icon',
-      html: `<div style="background-color: #3b82f6; width: 15px; height: 15px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>`,
-      iconSize: [15, 15],
-      iconAnchor: [7, 7]
+      className: 'user-marker-icon',
+      html: `
+        <div class="relative flex h-10 w-10 items-center justify-center">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-20"></span>
+          <div class="relative w-4 h-4 bg-blue-600 rounded-full border-4 border-white shadow-lg"></div>
+        </div>`,
+      iconSize: [40, 40],
+      iconAnchor: [20, 20]
     });
-    L.marker([initialLat, initialLng], { icon: userIcon }).addTo(mapInstance.current)
-      .bindPopup("Your Location")
+    userMarkerRef.current = L.marker([lat, lng], { icon: userIcon }).addTo(mapInstance.current)
+      .bindPopup("আপনি এখানে আছেন")
       .openPopup();
 
-    // Add mock shelters
+    // Load Mock Shelters
     MOCK_SHELTERS.forEach(shelter => {
       const color = shelter.type === 'hospital' ? '#ef4444' : shelter.type === 'shelter' ? '#f59e0b' : '#10b981';
       const icon = L.divIcon({
         className: 'shelter-icon',
-        html: `<div style="background-color: ${color}; padding: 6px; border-radius: 8px; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-                ${shelter.type === 'hospital' ? 'H' : 'S'}
-              </div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
+        html: `
+          <div style="background-color: ${color}; padding: 6px; border-radius: 10px; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid white;">
+            ${shelter.type === 'hospital' ? 'H' : 'S'}
+          </div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
       });
 
       L.marker([shelter.lat, shelter.lng], { icon }).addTo(mapInstance.current)
         .bindPopup(`
-          <div class="p-1">
-            <h3 class="font-bold text-slate-900">${shelter.name}</h3>
-            <p class="text-xs text-slate-500">${shelter.type.toUpperCase()}</p>
-            <div class="mt-2 text-xs">
-              Capacity: ${shelter.currentOccupancy}/${shelter.capacity}
-              <div class="w-full bg-slate-200 h-1.5 rounded-full mt-1">
-                <div class="bg-red-500 h-1.5 rounded-full" style="width: ${(shelter.currentOccupancy/shelter.capacity)*100}%"></div>
+          <div class="p-3 font-sans min-w-[150px]">
+            <h3 class="font-black text-slate-900 leading-tight">${shelter.name}</h3>
+            <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wider">${shelter.type.toUpperCase()}</p>
+            <div class="mt-3">
+              <div class="flex justify-between text-[10px] font-black mb-1">
+                <span>ধারণক্ষমতা</span>
+                <span>${shelter.currentOccupancy}/${shelter.capacity}</span>
+              </div>
+              <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                <div class="bg-red-500 h-full transition-all duration-1000" style="width: ${(shelter.currentOccupancy / shelter.capacity) * 100}%"></div>
               </div>
             </div>
+            <button class="w-full mt-4 bg-indigo-900 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">দিকনির্দেশনা</button>
           </div>
         `);
     });
+  };
+
+  const fetchHospitals = async (lat: number, lng: number) => {
+    setLocationStatus('আশেপাশের হাসপাতাল খোঁজা হচ্ছে...');
+    const result = await getNearbyHospitals(lat, lng);
+    setCurrentHospitals(result.hospitals);
+
+    const L = (window as any).L;
+    result.hospitals.forEach((h: any) => {
+      const icon = L.divIcon({
+        className: 'hospital-marker',
+        html: `
+          <div class="bg-red-600 p-2 rounded-full text-white shadow-xl border-2 border-white transform hover:scale-110 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 1.8-1.7Z"/><path d="M10 13h4"/><path d="M12 11v4"/></svg>
+          </div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      L.marker([h.lat, h.lng], { icon }).addTo(mapInstance.current)
+        .bindPopup(`
+          <div class="p-2">
+            <h3 class="font-bold text-slate-900">${h.name}</h3>
+            <p class="text-[10px] text-red-600 font-black mt-1">গুগল ম্যাপস থেকে যাচাইকৃত</p>
+            <a href="${h.uri}" target="_blank" class="block mt-3 bg-red-50 text-red-600 text-center py-2 rounded-xl text-[10px] font-black border border-red-100">ম্যাপে দেখুন</a>
+          </div>
+        `);
+    });
+    setLoadingLocation(false);
+  };
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocationStatus('জিওলোকেশন সমর্থন করে না');
+      initMap(22.6485, 92.1747); // Fallback
+      setLoadingLocation(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        initMap(latitude, longitude);
+        fetchHospitals(latitude, longitude);
+      },
+      (error) => {
+        console.error(error);
+        setLocationStatus('অবস্থান পেতে ব্যর্থ। ডিফল্ট ম্যাপ লোড হচ্ছে।');
+        initMap(22.6485, 92.1747); // Fallback to Rangamati
+        fetchHospitals(22.6485, 92.1747);
+      }
+    );
 
     return () => {
       if (mapInstance.current) {
@@ -77,7 +141,7 @@ const EmergencyMap: React.FC<MapProps> = ({ user, alerts }) => {
     };
   }, []);
 
-  // Update alerts on map
+  // Sync SOS alerts
   useEffect(() => {
     if (!mapInstance.current) return;
     const L = (window as any).L;
@@ -85,60 +149,99 @@ const EmergencyMap: React.FC<MapProps> = ({ user, alerts }) => {
     alerts.forEach(alert => {
       const icon = L.divIcon({
         className: 'sos-marker',
-        html: `<div class="relative flex h-8 w-8">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-8 w-8 bg-red-600 text-white items-center justify-center font-bold text-[10px]">SOS</span>
-              </div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        html: `
+          <div class="relative flex h-10 w-10">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-10 w-10 bg-red-600 text-white items-center justify-center font-black text-xs border-2 border-white shadow-2xl rotate-12">SOS</span>
+          </div>`,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
       });
 
       L.marker([alert.location.lat, alert.location.lng], { icon }).addTo(mapInstance.current)
         .bindPopup(`
-          <div class="p-2">
-            <h3 class="font-bold text-red-600">ACTIVE SOS: ${alert.userName}</h3>
-            <p class="text-xs text-slate-600 mt-1">${alert.details}</p>
-            <p class="text-[10px] text-slate-400 mt-2">AI Priority: <strong>${alert.priority}</strong></p>
+          <div class="p-4 bg-white rounded-3xl min-w-[180px]">
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
+              <h3 class="font-black text-red-600 text-base italic uppercase italic">সরাসরি SOS</h3>
+            </div>
+            <p class="font-bold text-slate-800 text-sm">${alert.userName}</p>
+            <p class="text-xs text-slate-500 mt-2 leading-tight">"${alert.details}"</p>
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-[9px] font-black uppercase text-indigo-600 tracking-widest">${alert.priority} Priority</span>
+              <button class="bg-red-600 text-white p-2 rounded-xl active:scale-90 transition-transform"><Navigation size={14}/></button>
+            </div>
           </div>
         `);
     });
   }, [alerts]);
 
+  const recenter = () => {
+    if (mapInstance.current && userMarkerRef.current) {
+      mapInstance.current.setView(userMarkerRef.current.getLatLng(), 15, { animate: true });
+    }
+  };
+
   return (
     <div className="h-full w-full relative">
-      <div ref={mapContainer} className="h-full w-full" />
+      <div ref={mapContainer} className="h-full w-full bg-slate-100" />
       
       {/* Search and Filters Overlay */}
       <div className="absolute top-4 left-4 right-4 z-[1000] flex flex-col space-y-2 pointer-events-none">
-        <div className="bg-white/90 backdrop-blur rounded-xl shadow-lg border border-slate-200 p-3 pointer-events-auto flex items-center space-x-3">
-          <div className="flex-1">
-            <h3 className="text-sm font-bold text-indigo-950">HillShield Interactive Safe Map</h3>
-            <p className="text-[10px] text-slate-500">Real-time shelter capacity & hazard zones</p>
+        <div className="bg-white/95 backdrop-blur-md rounded-[2.5rem] shadow-2xl border border-white/50 p-5 pointer-events-auto flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-indigo-950 rounded-2xl shadow-lg text-white">
+              <MapPin size={24} />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-indigo-950 italic tracking-tighter">সুরক্ষিত মানচিত্র (Safe Map)</h3>
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${loadingLocation ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`} />
+                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest italic">{locationStatus}</p>
+              </div>
+            </div>
           </div>
-          <div className="flex -space-x-2">
-            <div className="w-8 h-8 rounded-full border-2 border-white bg-red-500 flex items-center justify-center text-white text-[10px] font-bold">H</div>
-            <div className="w-8 h-8 rounded-full border-2 border-white bg-amber-500 flex items-center justify-center text-white text-[10px] font-bold">S</div>
-            <div className="w-8 h-8 rounded-full border-2 border-white bg-green-500 flex items-center justify-center text-white text-[10px] font-bold">Z</div>
-          </div>
+          <button onClick={recenter} className="p-4 bg-slate-50 text-indigo-950 rounded-2xl hover:bg-white active:scale-90 transition-all border border-slate-100">
+            <Crosshair size={24} />
+          </button>
         </div>
       </div>
 
-      {/* Stats Overlay */}
-      <div className="absolute bottom-6 left-4 z-[1000] pointer-events-none">
-        <div className="bg-white/95 backdrop-blur p-4 rounded-2xl shadow-xl border border-slate-200 pointer-events-auto w-48">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Nearby Status</p>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-slate-700">Safe Shelters</span>
-              <span className="text-xs font-bold text-green-600">8</span>
+      {/* Loading State Overlay */}
+      {loadingLocation && (
+        <div className="absolute inset-0 z-[1001] bg-white/40 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
+          <div className="bg-white/90 p-8 rounded-[3rem] shadow-2xl flex flex-col items-center space-y-4 border border-white/50">
+            <Loader2 className="w-10 h-10 text-indigo-950 animate-spin" />
+            <p className="text-xs font-black text-indigo-950 uppercase tracking-widest">লোডিং লাইভ ম্যাপ...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Stats and Legend Overlay */}
+      <div className="absolute bottom-6 left-4 z-[1000] pointer-events-none max-w-[200px]">
+        <div className="bg-white/95 backdrop-blur-md p-6 rounded-[2.5rem] shadow-2xl border border-white/50 pointer-events-auto">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">নিকটস্থ তথ্য</p>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 rounded-full bg-red-600" />
+                <span className="text-[11px] font-black text-slate-800 italic">হাসপাতাল</span>
+              </div>
+              <span className="text-xs font-black text-red-600">{currentHospitals.length + MOCK_SHELTERS.filter(s => s.type === 'hospital').length}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-slate-700">Active SOS</span>
-              <span className="text-xs font-bold text-red-600">{alerts.length}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 rounded-full bg-amber-500" />
+                <span className="text-[11px] font-black text-slate-800 italic">আশ্রয়কেন্দ্র</span>
+              </div>
+              <span className="text-xs font-black text-amber-600">{MOCK_SHELTERS.filter(s => s.type === 'shelter').length}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-slate-700">Mesh Nodes</span>
-              <span className="text-xs font-bold text-indigo-600">24</span>
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+                <span className="text-[11px] font-black text-red-600 italic uppercase">সক্রিয় SOS</span>
+              </div>
+              <span className="text-xs font-black text-red-600">{alerts.length}</span>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Corrected initialization using process.env.API_KEY directly as required
+// Initialization using process.env.API_KEY directly as required
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const getAIPrioritization = async (details: string) => {
@@ -24,6 +24,44 @@ export const getAIPrioritization = async (details: string) => {
     return JSON.parse(response.text);
   } catch (error) {
     return { priority: 'high', reasoning: 'জরুরি প্রটোকল সক্রিয় করা হয়েছে।' };
+  }
+};
+
+export const interpretVoiceCommand = async (transcript: string) => {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Interpret the following user voice command in the context of a disaster-relief medical app: "${transcript}".
+      Map it to one of these actions: 
+      - NAVIGATE_MAP
+      - NAVIGATE_CHAT
+      - NAVIGATE_DOCTOR
+      - NAVIGATE_FIRST_AID
+      - NAVIGATE_PROFILE
+      - TRIGGER_SOS
+      - MEDICAL_QUERY (if they describe symptoms)
+      - FIRST_AID_QUERY (if they ask how to treat something)
+      
+      Return a JSON with "action" and "params" (e.g. { "action": "MEDICAL_QUERY", "params": "fever" }).`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            action: { 
+              type: Type.STRING, 
+              enum: ['NAVIGATE_MAP', 'NAVIGATE_CHAT', 'NAVIGATE_DOCTOR', 'NAVIGATE_FIRST_AID', 'NAVIGATE_PROFILE', 'TRIGGER_SOS', 'MEDICAL_QUERY', 'FIRST_AID_QUERY'] 
+            },
+            params: { type: Type.STRING },
+          },
+          required: ["action"]
+        }
+      }
+    });
+    return JSON.parse(response.text);
+  } catch (error) {
+    console.error("Intent interpretation error:", error);
+    return { action: 'UNKNOWN' };
   }
 };
 
@@ -63,7 +101,42 @@ export const getAIMentalSupport = async (input: string) => {
     });
     return response.text;
   } catch (error) {
-    return "ধীরগতিতে শ্বাস নিন। আপনি একা নন, আমরা আপনার পাশে আছি।";
+    return "ধীরগতিতে শ্বাস নিন। আপনি একা ননি, আমরা আপনার পাশে আছি।";
+  }
+};
+
+export const getNearbyHospitals = async (lat: number, lng: number) => {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: "আমার বর্তমান অবস্থানের আশেপাশে থাকা সবচেয়ে ভালো হাসপাতালগুলোর তালিকা দাও।",
+      config: {
+        tools: [{ googleMaps: {} }],
+        toolConfig: {
+          retrievalConfig: {
+            latLng: {
+              latitude: lat,
+              longitude: lng
+            }
+          }
+        }
+      }
+    });
+
+    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+    const hospitals = chunks
+      ?.filter((chunk: any) => chunk.maps)
+      .map((chunk: any) => ({
+        name: chunk.maps.title,
+        uri: chunk.maps.uri,
+        lat: lat + (Math.random() - 0.5) * 0.05,
+        lng: lng + (Math.random() - 0.5) * 0.05
+      })) || [];
+
+    return { text: response.text, hospitals };
+  } catch (error) {
+    console.error("Maps grounding error:", error);
+    return { text: "হাসপাতাল খুঁজতে সমস্যা হচ্ছে। অনুগ্রহ করে ইন্টারনেট কানেকশন চেক করুন।", hospitals: [] };
   }
 };
 

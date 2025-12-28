@@ -7,9 +7,10 @@ import { COMMON_SYMPTOMS } from '../constants';
 
 interface AIDoctorProps {
   user: User;
+  initialQuery?: string | null;
 }
 
-const AIDoctor: React.FC<AIDoctorProps> = ({ user }) => {
+const AIDoctor: React.FC<AIDoctorProps> = ({ user, initialQuery }) => {
   const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([
     { role: 'ai', text: `${user.name}, আপনার কোনো শারীরিক অস্বস্তি বা লক্ষণ থাকলে আমাকে বিস্তারিত বলুন। আমি আপনার লক্ষণগুলো বিশ্লেষণ (Symptom Checking) করে প্রয়োজনীয় প্রাথমিক পরামর্শ দিতে প্রস্তুত।\n\nআপনি চাইলে নিচের সাধারণ লক্ষণগুলো থেকে একটি বেছে নিতে পারেন অথবা আপনার সমস্যাটি লিখে জানাতে পারেন।` }
   ]);
@@ -22,6 +23,13 @@ const AIDoctor: React.FC<AIDoctorProps> = ({ user }) => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isThinking]);
+
+  // Handle voice command entry
+  useEffect(() => {
+    if (initialQuery) {
+      handleSend(`ভয়েস কমান্ড থেকে: ${initialQuery}`);
+    }
+  }, [initialQuery]);
 
   const handleSend = async (customText?: string) => {
     const userText = customText || input;
@@ -43,7 +51,7 @@ const AIDoctor: React.FC<AIDoctorProps> = ({ user }) => {
 
   return (
     <div className="flex flex-col h-full bg-slate-50 animate-in fade-in duration-300">
-      {/* Header - Strictly focused on the consultant persona */}
+      {/* Header */}
       <div className="bg-indigo-950 p-6 text-white relative overflow-hidden shadow-xl border-b border-indigo-900">
         <div className="absolute -top-6 -right-6 p-8 opacity-10">
           <Stethoscope className="w-32 h-32" />
@@ -64,7 +72,7 @@ const AIDoctor: React.FC<AIDoctorProps> = ({ user }) => {
         </div>
       </div>
 
-      {/* Symptom Picker - Only shown at the beginning for convenience */}
+      {/* Symptom Picker */}
       {messages.length === 1 && (
         <div className="p-4 bg-white border-b border-slate-200 shadow-sm animate-in slide-in-from-top duration-500">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1 flex items-center">
@@ -125,7 +133,7 @@ const AIDoctor: React.FC<AIDoctorProps> = ({ user }) => {
         <div ref={scrollRef} />
       </div>
 
-      {/* Input Field - Styled to be professional */}
+      {/* Input Field */}
       <div className="p-4 bg-white border-t border-slate-100 pb-10 shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
         <div className="flex space-x-3 max-w-2xl mx-auto relative">
           <input 

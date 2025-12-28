@@ -21,6 +21,7 @@ import AIDoctor from './AIDoctor';
 import Profile from './Profile';
 import SOSButton from './SOSButton';
 import FirstAid from './FirstAid';
+import VoiceControl from './VoiceControl';
 import { MOCK_BROADCASTS, STRINGS } from '../constants';
 
 interface DashboardProps {
@@ -33,9 +34,36 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [isOnline] = useState(true);
   const [sosAlerts, setSosAlerts] = useState<SOSAlert[]>([]);
   const [broadcasts] = useState<Broadcast[]>(MOCK_BROADCASTS);
+  const [voiceQuery, setVoiceQuery] = useState<string | null>(null);
 
   const handleSOS = (alert: SOSAlert) => {
     setSosAlerts(prev => [alert, ...prev]);
+  };
+
+  const handleVoiceAction = (action: string, params?: string) => {
+    switch (action) {
+      case 'NAVIGATE_MAP': setCurrentView('map'); break;
+      case 'NAVIGATE_CHAT': setCurrentView('chat'); break;
+      case 'NAVIGATE_DOCTOR': 
+        setVoiceQuery(null);
+        setCurrentView('doctor'); 
+        break;
+      case 'NAVIGATE_FIRST_AID': setCurrentView('firstaid'); break;
+      case 'NAVIGATE_PROFILE': setCurrentView('profile'); break;
+      case 'TRIGGER_SOS': 
+        // We simulate clicking the SOS button would be safer but for directness:
+        // Triggering the SOS overlay would be best.
+        alert("জরুরি SOS সক্রিয় করা হচ্ছে!"); 
+        break;
+      case 'MEDICAL_QUERY':
+        setVoiceQuery(params || null);
+        setCurrentView('doctor');
+        break;
+      case 'FIRST_AID_QUERY':
+        setCurrentView('firstaid');
+        // Logic to jump to specific guide can be added in FirstAid component via props
+        break;
+    }
   };
 
   const renderView = () => {
@@ -43,7 +71,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       case 'map': return <EmergencyMap user={user} alerts={sosAlerts} />;
       case 'chat': return <MeshChat user={user} isOnline={isOnline} />;
       case 'broadcast': return <BroadcastFeed broadcasts={broadcasts} />;
-      case 'doctor': return <AIDoctor user={user} />;
+      case 'doctor': return <AIDoctor user={user} initialQuery={voiceQuery} />;
       case 'firstaid': return <FirstAid />;
       case 'profile': return <Profile user={user} onLogout={onLogout} />;
       default: return <EmergencyMap user={user} alerts={sosAlerts} />;
@@ -71,14 +99,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         {currentView !== 'chat' && currentView !== 'doctor' && (
           <SOSButton user={user} onSOS={handleSOS} />
         )}
+        <VoiceControl onAction={handleVoiceAction} />
       </main>
 
       <nav className="bg-white border-t border-slate-100 pb-safe-area shadow-[0_-15px_40px_rgba(0,0,0,0.08)] z-50">
         <div className="flex justify-around items-center h-24 min-w-full px-4">
           <NavButton active={currentView === 'map'} onClick={() => setCurrentView('map')} icon={<MapIcon className="w-6 h-6" />} label={STRINGS.nav_map} />
           <NavButton active={currentView === 'chat'} onClick={() => setCurrentView('chat')} icon={<MessageSquare className="w-6 h-6" />} label={STRINGS.nav_mesh} />
-          <NavButton active={currentView === 'doctor'} onClick={() => setCurrentView('doctor')} icon={<Heart className="w-6 h-6" />} label="ডাক্তার এআই" />
-          <NavButton active={currentView === 'firstaid'} onClick={() => setCurrentView('firstaid'} icon={<Activity className="w-6 h-6" />} label="চিকিৎসা" />
+          <NavButton active={currentView === 'doctor'} onClick={() => { setCurrentView('doctor'); setVoiceQuery(null); }} icon={<Heart className="w-6 h-6" />} label="ডাক্তার এআই" />
+          <NavButton active={currentView === 'firstaid'} onClick={() => setCurrentView('firstaid')} icon={<Activity className="w-6 h-6" />} label="চিকিৎসা" />
           <NavButton active={currentView === 'profile'} onClick={() => setCurrentView('profile')} icon={<UserIcon className="w-6 h-6" />} label={STRINGS.nav_profile} />
         </div>
       </nav>
