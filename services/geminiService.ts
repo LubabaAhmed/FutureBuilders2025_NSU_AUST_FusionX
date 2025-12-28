@@ -33,16 +33,8 @@ export const interpretVoiceCommand = async (transcript: string) => {
       model: "gemini-3-flash-preview",
       contents: `Interpret the following user voice command in the context of a disaster-relief medical app: "${transcript}".
       Map it to one of these actions: 
-      - NAVIGATE_MAP
-      - NAVIGATE_CHAT
-      - NAVIGATE_DOCTOR
-      - NAVIGATE_FIRST_AID
-      - NAVIGATE_PROFILE
-      - TRIGGER_SOS
-      - MEDICAL_QUERY (if they describe symptoms)
-      - FIRST_AID_QUERY (if they ask how to treat something)
-      
-      Return a JSON with "action" and "params" (e.g. { "action": "MEDICAL_QUERY", "params": "fever" }).`,
+      - NAVIGATE_MAP, NAVIGATE_CHAT, NAVIGATE_DOCTOR, NAVIGATE_FIRST_AID, NAVIGATE_PROFILE, TRIGGER_SOS, MEDICAL_QUERY, SCAN_MEDICINE, FIRST_AID_QUERY
+      Return a JSON with "action" and "params".`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -50,7 +42,7 @@ export const interpretVoiceCommand = async (transcript: string) => {
           properties: {
             action: { 
               type: Type.STRING, 
-              enum: ['NAVIGATE_MAP', 'NAVIGATE_CHAT', 'NAVIGATE_DOCTOR', 'NAVIGATE_FIRST_AID', 'NAVIGATE_PROFILE', 'TRIGGER_SOS', 'MEDICAL_QUERY', 'FIRST_AID_QUERY'] 
+              enum: ['NAVIGATE_MAP', 'NAVIGATE_CHAT', 'NAVIGATE_DOCTOR', 'NAVIGATE_FIRST_AID', 'NAVIGATE_PROFILE', 'TRIGGER_SOS', 'MEDICAL_QUERY', 'SCAN_MEDICINE', 'FIRST_AID_QUERY'] 
             },
             params: { type: Type.STRING },
           },
@@ -60,8 +52,39 @@ export const interpretVoiceCommand = async (transcript: string) => {
     });
     return JSON.parse(response.text);
   } catch (error) {
-    console.error("Intent interpretation error:", error);
     return { action: 'UNKNOWN' };
+  }
+};
+
+export const identifyMedicine = async (base64Image: string, mimeType: string) => {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [
+        { inlineData: { data: base64Image, mimeType: mimeType } },
+        { text: `Identify this medicine. Return JSON in Bangla with: name, generic, usage, dosage, warnings, riskLevel (1-4), priorityScore (1-10), disclaimer.` }
+      ],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            name: { type: Type.STRING },
+            generic: { type: Type.STRING },
+            usage: { type: Type.STRING },
+            dosage: { type: Type.STRING },
+            warnings: { type: Type.STRING },
+            riskLevel: { type: Type.INTEGER },
+            priorityScore: { type: Type.NUMBER },
+            disclaimer: { type: Type.STRING },
+          },
+          required: ["name", "generic", "usage", "warnings", "riskLevel", "priorityScore"]
+        }
+      }
+    });
+    return JSON.parse(response.text);
+  } catch (error) {
+    throw error;
   }
 };
 
@@ -69,24 +92,43 @@ export const getAIDoctorAdvice = async (symptoms: string) => {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `The user reports symptoms: "${symptoms}". 
-      1. Act as a professional 'Symptom Checker'. Analyze these symptoms and provide a potential medical assessment.
-      2. Respond with clinical precision, professional warmth, and deep empathy.
-      3. Your advice should follow this structure:
-         - Assessment (সারসংক্ষেপ)
-         - Immediate Actions (তাৎক্ষণিক পদক্ষেপ)
-         - Warning Signs (সতর্ক সংকেত - কখন হাসপাতালে যেতে হবে)
-         - Risk Category (ঝুঁকির ধরণ - Pregnant/Child/Elderly/General)
-      4. Do not ask for priority levels, instead, infer them from the symptoms provided.
-      5. Provide all guidance in clear, bulleted Bangla.
-      6. Mention if a 48-hour professional follow-up is recommended.`,
+      contents: `User reports: "${symptoms}". Analyze and triage.
+      Return JSON in Bangla:
+      - level: (1-4 integer)
+      - priorityScore: (1-10 float)
+      - levelTitle: Bangla text
+      - assessment: disease stage or progression summary
+      - actions: immediate steps
+      - warningSigns: what to watch out for
+      - color: hex code`,
       config: {
-        systemInstruction: "আপনি 'ডাক্তার আছে? ভার্চুয়াল কনসালট্যান্ট'। শুভেচ্ছা বিনিময় বা নমস্কার (Greeting like Nomoskar/Suprobhat) এড়িয়ে সরাসরি মূল আলোচনায় প্রবেশ করুন। আপনি একজন অভিজ্ঞ এবং অত্যন্ত দক্ষ মেডিকেল এআই। আপনার প্রধান কাজ হলো ইউজারের লক্ষণগুলো (Symptoms) বিশ্লেষণ করা এবং বৈজ্ঞানিক ও পেশাদার পরামর্শ দেওয়া। আপনার ভাষা হবে অত্যন্ত মার্জিত এবং সহমর্মী।"
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            level: { type: Type.INTEGER },
+            priorityScore: { type: Type.NUMBER },
+            levelTitle: { type: Type.STRING },
+            assessment: { type: Type.STRING },
+            actions: { type: Type.STRING },
+            warningSigns: { type: Type.STRING },
+            color: { type: Type.STRING },
+          },
+          required: ["level", "priorityScore", "levelTitle", "assessment", "actions", "warningSigns", "color"]
+        }
       }
     });
-    return response.text;
+    return JSON.parse(response.text);
   } catch (error) {
-    return "দুঃখিত, বর্তমানে টেকনিক্যাল সমস্যার কারণে আমি বিস্তারিত পরামর্শ দিতে পারছি না। গুরুতর সমস্যায় দ্রুত নিকটস্থ হাসপাতালে যোগাযোগ করুন। আমরা আপনার দ্রুত আরোগ্য কামনা করি।";
+    return { 
+      level: 2, 
+      priorityScore: 5.0,
+      levelTitle: "তথ্য অসম্পূর্ণ", 
+      assessment: "বিশ্লেষণ করতে সমস্যা হচ্ছে।", 
+      actions: "নিকটস্থ ডাক্তারের সাথে যোগাযোগ করুন।", 
+      warningSigns: "হাসপাতালে যান।",
+      color: "#eab308"
+    };
   }
 };
 
@@ -96,12 +138,12 @@ export const getAIMentalSupport = async (input: string) => {
       model: "gemini-3-flash-preview",
       contents: `User is distressed: "${input}". Provide calming, empathetic support in Bangla. Focus on stress reduction.`,
       config: {
-        systemInstruction: "আপনি একজন ট্রমা-ইনফর্মড কাউন্সিলর। দুর্যোগের সময় মানুষের মানসিক চাপ কমাতে সাহায্য করুন। আপনার ভাষা হবে অত্যন্ত শান্ত এবং আশ্বাসদায়ক।"
+        systemInstruction: "আপনি একজন ট্রমা-ইনফর্মড কাউন্সিলর। দুর্যোগের সময় মানুষের মানসিক চাপ কমাতে সাহায্য করুন।"
       }
     });
     return response.text;
   } catch (error) {
-    return "ধীরগতিতে শ্বাস নিন। আপনি একা ননি, আমরা আপনার পাশে আছি।";
+    return "ধীরগতিতে শ্বাস নিন। আমরা আপনার পাশে আছি।";
   }
 };
 
@@ -122,7 +164,6 @@ export const getNearbyHospitals = async (lat: number, lng: number) => {
         }
       }
     });
-
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
     const hospitals = chunks
       ?.filter((chunk: any) => chunk.maps)
@@ -132,11 +173,9 @@ export const getNearbyHospitals = async (lat: number, lng: number) => {
         lat: lat + (Math.random() - 0.5) * 0.05,
         lng: lng + (Math.random() - 0.5) * 0.05
       })) || [];
-
     return { text: response.text, hospitals };
   } catch (error) {
-    console.error("Maps grounding error:", error);
-    return { text: "হাসপাতাল খুঁজতে সমস্যা হচ্ছে। অনুগ্রহ করে ইন্টারনেট কানেকশন চেক করুন।", hospitals: [] };
+    return { text: "হাসপাতাল খুঁজতে সমস্যা হচ্ছে।", hospitals: [] };
   }
 };
 

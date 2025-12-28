@@ -75,23 +75,25 @@ export interface Appointment {
 export interface Shelter {
   id: string;
   name: string;
-  type: 'hospital' | 'shelter' | 'safe-zone';
+  type: 'hospital' | 'shelter' | 'safe-zone' | 'doctor' | 'volunteer';
   lat: number;
   lng: number;
-  capacity: number;
-  currentOccupancy: number;
+  capacity?: number;
+  currentOccupancy?: number;
   distance?: number;
+  phone?: string;
+  specialty?: string;
 }
 
 export interface Broadcast {
   id: string;
   authority: string;
   message: string;
-  type: 'warning' | 'info' | 'critical';
+  type: 'warning' | 'info' | 'critical' | 'epidemic';
   timestamp: number;
 }
 
-export type AppView = 'map' | 'chat' | 'broadcast' | 'doctor' | 'profile' | 'firstaid' | 'mental-health';
+export type AppView = 'map' | 'chat' | 'broadcast' | 'doctor' | 'profile' | 'firstaid' | 'mental-health' | 'community';
 
 export interface FirstAidStepDetail {
   text: string;

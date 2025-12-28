@@ -50,9 +50,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         break;
       case 'NAVIGATE_FIRST_AID': setCurrentView('firstaid'); break;
       case 'NAVIGATE_PROFILE': setCurrentView('profile'); break;
+      case 'SCAN_MEDICINE':
+        setCurrentView('doctor');
+        setVoiceQuery("ওষুধ স্ক্যান করতে ক্যামেরা বাটন চাপুন।");
+        break;
       case 'TRIGGER_SOS': 
-        // We simulate clicking the SOS button would be safer but for directness:
-        // Triggering the SOS overlay would be best.
         alert("জরুরি SOS সক্রিয় করা হচ্ছে!"); 
         break;
       case 'MEDICAL_QUERY':
@@ -61,7 +63,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         break;
       case 'FIRST_AID_QUERY':
         setCurrentView('firstaid');
-        // Logic to jump to specific guide can be added in FirstAid component via props
         break;
     }
   };

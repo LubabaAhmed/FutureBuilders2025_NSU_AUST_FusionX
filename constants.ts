@@ -218,8 +218,13 @@ export const MOCK_SHELTERS: Shelter[] = [
   { id: '1', name: 'রাঙ্গামাটি জেনারেল হাসপাতাল', type: 'hospital', lat: 22.6485, lng: 92.1747, capacity: 500, currentOccupancy: 420 },
   { id: '2', name: 'কাপ্তাই আশ্রয়কেন্দ্র', type: 'shelter', lat: 22.5005, lng: 92.2173, capacity: 300, currentOccupancy: 120 },
   { id: '3', name: 'সেফ জোন আলফা', type: 'safe-zone', lat: 23.3855, lng: 92.2905, capacity: 1000, currentOccupancy: 150 },
+  { id: 'd1', name: 'ডাঃ তানিয়া আহমেদ', type: 'doctor', lat: 22.6510, lng: 92.1800, specialty: 'General Physician', phone: '০১৫১১-২২২৩৩৪' },
+  { id: 'd2', name: 'ডাঃ কামাল হোসেন', type: 'doctor', lat: 22.6450, lng: 92.1700, specialty: 'Cardiologist', phone: '০১৮১১-৩৩৪৪৫৫' },
+  { id: 'v1', name: 'করিম মিঞা (স্বেচ্ছাসেবক)', type: 'volunteer', lat: 22.6490, lng: 92.1760, specialty: 'First Aid Trained', phone: '০১৭০০-১১২২৩৩' },
+  { id: 'v2', name: 'আয়েশা বেগম (স্বাস্থ্যকর্মী)', type: 'volunteer', lat: 22.6470, lng: 92.1720, specialty: 'Maternal Care', phone: '০১৯০০-৪৫৪৫৬৭' },
 ];
 
 export const MOCK_BROADCASTS: Broadcast[] = [
   { id: 'b1', authority: 'দুর্যোগ রেসপন্স', message: 'ভারী বৃষ্টির পূর্বাভাস। পাহাড়ি এলাকায় ভূমিধস সতর্কতা।', type: 'warning', timestamp: Date.now() - 3600000 },
+  { id: 'b2', authority: 'স্বাস্থ্য অধিদপ্তর', message: 'এলাকায় ইনফ্লুয়েঞ্জা প্রাদুর্ভাব দেখা দিয়েছে। পরিষ্কার থাকুন এবং মাস্ক ব্যবহার করুন।', type: 'epidemic', timestamp: Date.now() - 7200000 },
 ];

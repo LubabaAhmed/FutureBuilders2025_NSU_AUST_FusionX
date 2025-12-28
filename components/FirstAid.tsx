@@ -24,13 +24,16 @@ import {
   Bug,
   HeartHandshake,
   ShieldAlert,
-  Wind
+  Wind,
+  Users,
+  MessageCircle,
+  Phone
 } from 'lucide-react';
-import { FIRST_AID_DATA } from '../constants';
-import { FirstAidStep, FirstAidStepDetail } from '../types';
+import { FIRST_AID_DATA, MOCK_SHELTERS } from '../constants';
+import { FirstAidStep, FirstAidStepDetail, Shelter } from '../types';
 import MentalHealth from './MentalHealth';
 
-type MedicalView = 'hub' | 'list' | 'mental-health' | 'detail' | 'appointment-hub' | 'mom-kid-care';
+type MedicalView = 'hub' | 'list' | 'mental-health' | 'detail' | 'appointment-hub' | 'mom-kid-care' | 'community-connect';
 type CategoryFilter = 'all' | 'injury' | 'medical' | 'natural-disaster' | 'environmental';
 
 const FirstAid: React.FC = () => {
@@ -95,19 +98,28 @@ const FirstAid: React.FC = () => {
         <div className="p-6 space-y-6 -mt-8 relative z-20">
           <div className="grid grid-cols-1 gap-4">
             <HubCard 
-              title="৪৮ ঘণ্টা সার্ভিস" 
-              sub="জরুরি ডাক্তার অ্যাপয়েন্টমেন্ট" 
-              icon={<Calendar className="w-8 h-8" />} 
-              color="bg-indigo-600" 
-              onClick={() => setView('appointment-hub')} 
+              title="স্বাস্থ্য কমিউনিটি কানেক্ট" 
+              sub="নিকটস্থ ডাক্তার ও ভলান্টিয়ার" 
+              icon={<HeartHandshake className="w-8 h-8" />} 
+              color="bg-green-600" 
+              onClick={() => setView('community-connect')} 
             />
-            <HubCard 
-              title="মা ও শিশু বিশেষ যত্ন" 
-              sub="মাতৃ ও শিশু স্বাস্থ্য সেবা" 
-              icon={<Baby className="w-8 h-8" />} 
-              color="bg-pink-600" 
-              onClick={() => setView('mom-kid-care')} 
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <HubCard 
+                title="৪৮ ঘণ্টা সার্ভিস" 
+                sub="জরুরি অ্যাপয়েন্টমেন্ট" 
+                icon={<Calendar className="w-6 h-6" />} 
+                color="bg-indigo-600" 
+                onClick={() => setView('appointment-hub')} 
+              />
+              <HubCard 
+                title="মা ও শিশু যত্ন" 
+                sub="বিশেষ সেবা" 
+                icon={<Baby className="w-6 h-6" />} 
+                color="bg-pink-600" 
+                onClick={() => setView('mom-kid-care')} 
+              />
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -136,6 +148,76 @@ const FirstAid: React.FC = () => {
               />
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'community-connect') {
+    const doctors = MOCK_SHELTERS.filter(s => s.type === 'doctor');
+    const volunteers = MOCK_SHELTERS.filter(s => s.type === 'volunteer');
+
+    return (
+      <div className="h-full bg-slate-50 flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto pb-24">
+        <div className="bg-green-600 p-6 flex items-center space-x-4 text-white shadow-lg sticky top-0 z-30">
+          <button onClick={() => setView('hub')} className="bg-white/20 p-2 rounded-xl active:scale-90 transition-all">
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <h2 className="text-xl font-black italic tracking-tight">স্বাস্থ্য কমিউনিটি</h2>
+        </div>
+
+        <div className="p-6 space-y-8">
+          <section className="space-y-4">
+            <div className="flex items-center space-x-2 ml-2">
+              <Stethoscope className="w-4 h-4 text-indigo-600" />
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">নিকটস্থ ডাক্তার</h4>
+            </div>
+            <div className="space-y-3">
+              {doctors.map(dr => (
+                <div key={dr.id} className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 font-black">
+                      <Stethoscope className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h5 className="font-black text-slate-800 leading-none">{dr.name}</h5>
+                      <p className="text-[10px] text-indigo-600 font-bold uppercase mt-1 tracking-tighter">{dr.specialty}</p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <a href={`tel:${dr.phone}`} className="p-3 bg-indigo-50 text-indigo-600 rounded-xl active:scale-90 transition-all"><Phone size={18} /></a>
+                    <button className="p-3 bg-indigo-600 text-white rounded-xl active:scale-90 transition-all"><MessageCircle size={18} /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-4">
+            <div className="flex items-center space-x-2 ml-2">
+              <Users className="w-4 h-4 text-green-600" />
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">স্বাস্থ্য স্বেচ্ছাসেবক</h4>
+            </div>
+            <div className="space-y-3">
+              {volunteers.map(v => (
+                <div key={v.id} className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-600 font-black">
+                      <Users className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h5 className="font-black text-slate-800 leading-none">{v.name}</h5>
+                      <p className="text-[10px] text-green-600 font-bold uppercase mt-1 tracking-tighter">{v.specialty}</p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <a href={`tel:${v.phone}`} className="p-3 bg-green-50 text-green-600 rounded-xl active:scale-90 transition-all"><Phone size={18} /></a>
+                    <button className="p-3 bg-green-600 text-white rounded-xl active:scale-90 transition-all"><MessageCircle size={18} /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
       </div>
     );
@@ -396,7 +478,7 @@ const HubCard = ({ title, sub, icon, color, onClick }: any) => (
       {icon}
     </div>
     <div className="text-left flex-1">
-      <h3 className="text-2xl font-black italic tracking-tighter text-slate-900 leading-none">{title}</h3>
+      <h3 className="text-xl font-black italic tracking-tighter text-slate-900 leading-tight">{title}</h3>
       <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1.5">{sub}</p>
     </div>
     <ChevronRight className="w-6 h-6 text-slate-200" />
